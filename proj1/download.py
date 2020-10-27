@@ -92,7 +92,6 @@ class DataDownloader:
         region_f = '0'+ str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
 
-        print(data)
 
     def process_folder(self,file_name):
 
@@ -104,9 +103,9 @@ class DataDownloader:
                     for line in csv_f:
                         clean_line = self.parse_line(line)
                         data.append(clean_line)
-                        break    
+                        #break    
 
-        #data = self.check_duplicates(data)
+        data = self.check_duplicates(data)
         print(len(data))
 
         return (self.columns,data)
@@ -115,7 +114,7 @@ class DataDownloader:
     def check_duplicates(self, data):
 
         seen = set()
-        data = [x for x in data if x[0] not in seen and not seen.add(x[0])]
+        data = [x for x in data if x['p1'] not in seen and not seen.add(x['p1'])]
 
         return data
 
@@ -130,8 +129,8 @@ class DataDownloader:
         # Create a dictionary from list
         zipbObj = zip(self.col_dic, splitted)
         line_dic = dict(zipbObj)
-        print('#DEBUG#')
-        print(line_dic)
+        #print('#DEBUG#')
+        #print(line_dic)
         
         return self.cleanup(line_dic)
 
@@ -143,7 +142,7 @@ class DataDownloader:
 
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
-        
+
         return line
 
 
