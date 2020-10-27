@@ -1,10 +1,12 @@
-import os, requests, urllib
+import os, requests, urllib, zipfile
 from bs4 import BeautifulSoup
 
 class DataDownloader:
 
     cookies = {}
     headers = {}
+    regions = {'PHA':0,'STC':1,'JHC':2,'PLK':3,'KVK':19,'ULK':4,'LBK':18,
+               'HKK':5,'PAK':17,'OLK':14,'MSK':7,'JHM':6,'ZLK':15,'VYS':16}
 
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
@@ -28,13 +30,13 @@ class DataDownloader:
         soup = BeautifulSoup(data, features="lxml")
         
         for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
-            print(link['href'])
             data = s.get(self.url+link['href'])
             open(link['href'],'wb').write(data.content)
-
+            print("DEBUG DOWNLOAD")
  
 
     def set_connection(self):
+        """ sets cookies and header for url request """
 
         self.cookies = {
             '_ranaCid': '1768967324.1556314328',
@@ -58,7 +60,16 @@ class DataDownloader:
 
 
     def parse_region_data(self,region):
-        pass
+
+        if not os.listdir(self.folder):
+            self.download_data()
+        
+        region_f = '0'+ str(self.regions[region])+'.csv'
+
+        for file in os.listdir(self.folder):
+            with zipfile.ZipFile(os.path.join(self.folder,file)) as zf:
+                with zf.open(region_f,'r') as f:
+                    print(f)
 
 
     def get_list(self, regions = None):
@@ -67,9 +78,8 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    data.download_data()
+    data.parse_region_data('PHA')
     
-
 
 
 
