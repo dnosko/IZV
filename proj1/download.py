@@ -81,10 +81,12 @@ class DataDownloader:
             self.download_data()
         
 
+        self.columns.insert(0,region)
+
         region_f = '0'+ str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
-        num = np.array(data)
 
+        print(data)
 
     def process_folder(self,file_name):
 
@@ -96,13 +98,22 @@ class DataDownloader:
                     for line in csv_f:
                         clean_line = self.parse_line(line)
                         data.append(clean_line)
-                    
+                        
+
+        data = self.check_duplicates(data)
+
+        return (self.columns,data)
+
+
+    def check_duplicates(self, data):
+
         seen = set()
         data = [x for x in data if x[0] not in seen and not seen.add(x[0])]
+
         return data
 
-
     def parse_line(self,line):
+        """ Processing of the given line """
 
         line = line.decode("utf-8",'backslashreplace')
         splitted = line.split(";")
@@ -112,7 +123,23 @@ class DataDownloader:
 
 
     def cleanup(self, line):
-        pass
+        """ Cleans up data values at given line """
+
+        line[5] = self.clean_time(line[5])
+        
+        return line
+    
+
+    def clean_time(self,col):
+        """ Cleans column with time """
+
+        clean = col.replace("\"",'')
+
+        hour = clean[:2]
+        min = clean[2:]
+        clean = clean[:2] + ':' + clean[2:]
+
+        return clean
 
 
     def get_list(self, regions = None):
