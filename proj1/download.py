@@ -1,4 +1,5 @@
-import os, requests, urllib, zipfile, csv
+import os, requests, urllib, zipfile, csv,timeit
+import numpy as np
 from bs4 import BeautifulSoup
 
 class DataDownloader:
@@ -20,6 +21,8 @@ class DataDownloader:
               'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
               'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
               'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a']
+    
+
 
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
@@ -79,29 +82,38 @@ class DataDownloader:
         
 
         region_f = '0'+ str(self.regions[region])+'.csv'
-
-        for zfile in os.listdir(self.folder):
-            self.process_file(zfile,region_f)
-            break
+        data = self.process_folder(region_f)
+        num = np.array(data)
 
 
-    def process_file(self,zfile,file_name):
+    def process_folder(self,file_name):
 
-        with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
-            #TODO odstranit prazdne subory 7-13  ??
-            with zf.open(file_name,'r') as csv_f:
-                self.parse_file(csv_f)
-    
+        data = []
+        for zfile in os.listdir(self.folder): 
+            with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
+                #TODO odstranit prazdne subory 7-13  ??
+                with zf.open(file_name,'r') as csv_f:
+                    for line in csv_f:
+                        clean_line = self.parse_line(line)
+                        data.append(clean_line)
+                    
+        seen = set()
+        data = [x for x in data if x[0] not in seen and not seen.add(x[0])]
+        return data
 
-    def parse_file(self,file):
 
-            for line in file:
-                line = line.decode("utf-8",'backslashreplace')
-                splitted = line.split(";")
-                splitted[-1] = splitted[-1].split("\r\n")[0]
-                print(splitted)
-                        
-                break
+    def parse_line(self,line):
+
+        line = line.decode("utf-8",'backslashreplace')
+        splitted = line.split(";")
+        splitted[-1] = splitted[-1].split("\r\n")[0]
+
+        return self.cleanup(splitted)
+
+
+    def cleanup(self, line):
+        pass
+
 
     def get_list(self, regions = None):
         pass
@@ -110,7 +122,6 @@ class DataDownloader:
 if __name__ == "__main__":
     data = DataDownloader()
     data.parse_region_data('PHA')
-    
 
 
 
