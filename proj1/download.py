@@ -21,6 +21,12 @@ class DataDownloader:
               'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
               'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
               'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a']
+
+    col_dic = ('p1','p36','p37','p2a','weekday(p2a)','p2b','p6','p7','p8','p9',	'p10',
+              'p11','p12','p13a','p13b','p13c','p14','p15',	'p16','p17','p18','p19',
+              'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
+              'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
+              'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a')
     
 
 
@@ -98,9 +104,10 @@ class DataDownloader:
                     for line in csv_f:
                         clean_line = self.parse_line(line)
                         data.append(clean_line)
-                        
+                        break    
 
-        data = self.check_duplicates(data)
+        #data = self.check_duplicates(data)
+        print(len(data))
 
         return (self.columns,data)
 
@@ -112,6 +119,7 @@ class DataDownloader:
 
         return data
 
+
     def parse_line(self,line):
         """ Processing of the given line """
 
@@ -119,27 +127,52 @@ class DataDownloader:
         splitted = line.split(";")
         splitted[-1] = splitted[-1].split("\r\n")[0]
 
-        return self.cleanup(splitted)
+        zipbObj = zip(self.col_dic, splitted)
+
+        # Create a dictionary from zip object
+        line_dic = dict(zipbObj)
+        print('#######')
+        print(line_dic)
+        
+        return self.cleanup(line_dic)
 
 
     def cleanup(self, line):
         """ Cleans up data values at given line """
 
-        line[5] = self.clean_time(line[5])
-        
+        line = self.replace_quotes(line)
+
+        line['p2b'] = self.clean_time(line['p2b'])
+        line['p47'] = self.clean_XX(line['p47'])
         return line
-    
+
+
+    def replace_quotes(self,line):
+        """ Replaces double quotes from all values with them """
+        
+        for k,v in line.items():
+            line[k] = v.replace("\"",'')
+
+        return line
+        
 
     def clean_time(self,col):
         """ Cleans column with time """
 
-        clean = col.replace("\"",'')
+        hour = col[:2]
+        min = col[2:]
+        col = col[:2] + ':' + col[2:]
 
-        hour = clean[:2]
-        min = clean[2:]
-        clean = clean[:2] + ':' + clean[2:]
+        return col
 
-        return clean
+
+    def clean_XX(self,col):
+        """ Replaces XX with """
+        
+        if col == "XX":
+            col = col.replace("XX","")
+        
+        return col
 
 
     def get_list(self, regions = None):
