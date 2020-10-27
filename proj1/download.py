@@ -1,4 +1,4 @@
-import os, requests, urllib, zipfile
+import os, requests, urllib, zipfile, csv
 from bs4 import BeautifulSoup
 
 class DataDownloader:
@@ -7,6 +7,19 @@ class DataDownloader:
     headers = {}
     regions = {'PHA':0,'STC':1,'JHC':2,'PLK':3,'KVK':19,'ULK':4,'LBK':18,
                'HKK':5,'PAK':17,'OLK':14,'MSK':7,'JHM':6,'ZLK':15,'VYS':16}
+    """ = ['Region','ID','Čas','Lokalita','Druh nehody','Druh zrážky','Druh prekážky',
+               'Charakter','Zavinenie','Alkohol','Príčina','Následky','Celková škoda',
+               'Druh povrchu vozovky','Stav povrchu vozovky','Stav komunikácie',
+               'Poveternostné podmienky','Viditelnosť','Rozhledove pomery','Delenie komunikacie',
+               'Situovanie nehody na komunikacii','Riadenie premavky','Prednost v jazde',
+               'Miesta a objekty','Smerove pomery',]
+    pedestrians = ['Kategoria chodca','Stav chodca','Chovanie chodca','Situacia']"""
+    #urobit nech to sparsuje zo suboru
+    columns = ['p1','p36','p37','p2a','weekday(p2a)','p2b','p6','p7','p8','p9',	'p10',
+              'p11','p12','p13a','p13b','p13c','p14','p15',	'p16','p17','p18','p19',
+              'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
+              'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
+              'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a']
 
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
@@ -64,13 +77,31 @@ class DataDownloader:
         if not os.listdir(self.folder):
             self.download_data()
         
+
         region_f = '0'+ str(self.regions[region])+'.csv'
 
-        for file in os.listdir(self.folder):
-            with zipfile.ZipFile(os.path.join(self.folder,file)) as zf:
-                with zf.open(region_f,'r') as f:
-                    print(f)
+        for zfile in os.listdir(self.folder):
+            self.process_file(zfile,region_f)
+            break
 
+
+    def process_file(self,zfile,file_name):
+
+        with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
+            #TODO odstranit prazdne subory 7-13  ??
+            with zf.open(file_name,'r') as csv_f:
+                self.parse_file(csv_f)
+    
+
+    def parse_file(self,file):
+
+            for line in file:
+                line = line.decode("utf-8",'backslashreplace')
+                splitted = line.split(";")
+                splitted[-1] = splitted[-1].split("\r\n")[0]
+                print(splitted)
+                        
+                break
 
     def get_list(self, regions = None):
         pass
