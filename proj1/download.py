@@ -127,11 +127,10 @@ class DataDownloader:
         splitted = line.split(";")
         splitted[-1] = splitted[-1].split("\r\n")[0]
 
+        # Create a dictionary from list
         zipbObj = zip(self.col_dic, splitted)
-
-        # Create a dictionary from zip object
         line_dic = dict(zipbObj)
-        print('#######')
+        print('#DEBUG#')
         print(line_dic)
         
         return self.cleanup(line_dic)
@@ -144,6 +143,7 @@ class DataDownloader:
 
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
+        
         return line
 
 
@@ -152,18 +152,24 @@ class DataDownloader:
         
         for k,v in line.items():
             line[k] = v.replace("\"",'')
-
+        
         return line
         
 
     def clean_time(self,col):
-        """ Cleans column with time """
+        """ Cleans column with time, when hour is unknown set value to empty,
+            if only minutes are unknown set them to XX. 
+            Sets to HH:MM format """
 
         hour = col[:2]
         min = col[2:]
-        col = col[:2] + ':' + col[2:]
 
-        return col
+        if hour == 25:
+            col = ''
+        if min == 60:
+            min = 'XX'
+
+        return hour + ':' + min
 
 
     def clean_XX(self,col):
