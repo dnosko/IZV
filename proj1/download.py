@@ -210,7 +210,6 @@ class DataDownloader:
         """ If param regions = None, print all regions except PHK"""
 
         process_regs = []
-        ret_tuple = ()
 
         if not regions: 
             process_regs = list(self.regions.keys())[1:] #all regions except prague
@@ -219,11 +218,10 @@ class DataDownloader:
 
         for reg in process_regs:
             if reg in self.cache:
-                return self.cache[reg]
+                region_data =  self.cache[reg]
             elif os.path.exists(self.cache_filename.format(reg)):
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
-                return region_data
             else:
                 try:
                     region_data = self.parse_region_data(reg)
@@ -232,6 +230,8 @@ class DataDownloader:
                 finally:
                     self.cache.update({reg : region_data}) # save to class attribute
                     self.pickle_file(reg,region_data) #pickle file
+        
+        return region_data
 
     
     def pickle_file(self,region, tuple_val):
@@ -257,7 +257,7 @@ class DataDownloader:
 if __name__ == "__main__":
     data = DataDownloader()
     ret = data.get_list(['PHA','KVK','MSK'])
-    print(type(ret))
+    print(ret)
 
 
 
