@@ -22,6 +22,7 @@ class DataDownloader:
               'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
               'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a']
 
+    #TODO z colums urob kopiu nie takto na tvrdo
     col_dic = ('p1','p36','p37','p2a','weekday(p2a)','p2b','p6','p7','p8','p9',	'p10',
               'p11','p12','p13a','p13b','p13c','p14','p15',	'p16','p17','p18','p19',
               'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
@@ -106,7 +107,6 @@ class DataDownloader:
                         #break    
 
         data = self.check_duplicates(data)
-        print(len(data))
 
         return (self.columns,data)
 
@@ -142,6 +142,7 @@ class DataDownloader:
 
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
+        line = self.change_to_float(['d','e','f','g'],line)
 
         return line
 
@@ -178,6 +179,20 @@ class DataDownloader:
             col = col.replace("XX","")
         
         return col
+    
+    
+    def change_to_float(self,cols,line):
+        """ Changes values in all cols [list] to float type"""
+
+        for i in cols:
+            a = line[i]
+            if a == '':
+                continue
+            line[i] = float(a.replace(",","."))
+           
+        print(type(line[i]))
+
+        return line
 
 
     def get_list(self, regions = None):
