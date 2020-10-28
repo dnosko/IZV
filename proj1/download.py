@@ -1,4 +1,4 @@
-import os, requests, urllib, zipfile, csv,timeit
+import os, requests, urllib, zipfile, csv, pickle, gzip
 import numpy as np
 from bs4 import BeautifulSoup
 
@@ -6,6 +6,7 @@ class DataDownloader:
 
     cookies = {}
     headers = {}
+    cache = {} 
     regions = {'PHA':0,'STC':1,'JHC':2,'PLK':3,'KVK':19,'ULK':4,'LBK':18,
                'HKK':5,'PAK':17,'OLK':14,'MSK':7,'JHM':6,'ZLK':15,'VYS':16}
     """ = ['Region','ID','Čas','Lokalita','Druh nehody','Druh zrážky','Druh prekážky',
@@ -15,8 +16,7 @@ class DataDownloader:
                'Situovanie nehody na komunikacii','Riadenie premavky','Prednost v jazde',
                'Miesta a objekty','Smerove pomery',]
     pedestrians = ['Kategoria chodca','Stav chodca','Chovanie chodca','Situacia']"""
-    
-    #TODO urobit nech to sparsuje zo suboru
+
     columns = ('p1','p36','p37','p2a','weekday(p2a)','p2b','p6','p7','p8','p9',	'p10',
               'p11','p12','p13a','p13b','p13c','p14','p15',	'p16','p17','p18','p19',
               'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
@@ -27,7 +27,7 @@ class DataDownloader:
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
         self.folder = folder
-        self.cache_filename = cache_filename
+        self.cache_filename = folder+'/'+cache_filename
         self.create_folder(self.folder)
         self.set_connection()
 
@@ -85,33 +85,36 @@ class DataDownloader:
 
         region_f = '0'+ str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
-
-        self.columns = list(self.columns)
-        self.columns.insert(0,region)
         
-        return (self.columns,data) 
+        self.columns = list(self.columns)
+        
+
+        return ([region, self.columns],data) 
 
 
     def process_folder(self,file_name):
 
         data = {}
 
-        for zfile in os.listdir(self.folder): 
-            with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
-                #TODO odstranit prazdne subory 7-13  ??
-                with zf.open(file_name,'r') as csv_f:
-                    for line in csv_f:
-                        clean_line = self.parse_line(line)
-                        
-                        #add to dictionary if it's not already there
-                        if clean_line['p1'] not in data:
-                            data.update({clean_line['p1'] : clean_line})
+        for zfile in os.listdir(self.folder):
+            try: 
+                with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
+                    #TODO odstranit prazdne subory 7-13  ??
+                    with zf.open(file_name,'r') as csv_f:
+                        for line in csv_f:
+                            clean_line = self.parse_line(line)
                             
-                        break
+                            #add to dictionary if it's not already there
+                            if clean_line['p1'] not in data:
+                                data.update({clean_line['p1'] : clean_line})
+                                
+                            break
+            except zipfile.BadZipFile:
+                pass
 
         # make array out of dict
-        arr = np.array(list([item.values() for item in data.values()]))
-
+        arr = np.array(list([item for item in data.values()]))
+        
         return arr
 
 
@@ -184,13 +187,16 @@ class DataDownloader:
     
     
     def change_to_float(self,cols,line):
-        """ Changes values in all cols [list] to float type"""
+        """ Changes values in all cols [list] to float type. If value is text, change to None"""
 
         for i in cols:
             a = line[i]
             if a == '':
                 continue
-            line[i] = float(a.replace(",","."))
+            try:
+                line[i] = float(a.replace(",","."))
+            except ValueError:
+                line[i] = None #sometimes theres string in data ????
 
         return line
     
@@ -201,12 +207,57 @@ class DataDownloader:
 
 
     def get_list(self, regions = None):
-        pass
+        """ If param regions = None, print all regions except PHK"""
 
+        process_regs = []
+        ret_tuple = ()
+
+        if not regions: 
+            process_regs = list(self.regions.keys())[1:] #all regions except prague
+        else:
+            process_regs = regions
+
+        for reg in process_regs:
+            print('DEBUG',reg)
+            if reg in self.cache:
+                #ret_tuple = zip(ret_tuple,self.cache[reg])
+                return self.cache[reg]
+            elif os.path.exists(self.cache_filename.format(reg)):
+                print('debug')
+                #ak je v cache subore, nacita vysledok odtialto, ulozi do cache a vrati
+                self.unpickle_file(reg)
+            else:
+                try:
+                    processed = self.parse_region_data(reg)
+                except KeyError:
+                    pass
+                finally:
+                    self.cache.update({reg : processed}) # save to class attribute
+                    self.pickle_file(reg,processed) #pickle file
+
+    
+    def pickle_file(self,region, tuple_val):
+        """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
+
+        f = self.cache_filename.format(region)
+        
+        with gzip.open(f,'wt') as gzip_f:
+            with open('data.pkl','wb') as pickle_f:
+                pickle.dump(tuple_val,pickle_f)
+            
+
+    def unpickle_file(self,region):
+
+        f = self.cache_filename.format(region)
+        
+        with gzip.open(f,'rt') as gzip_f:
+            with open('data.pkl','rb') as f:
+                print(pickle.load(f))
 
 if __name__ == "__main__":
     data = DataDownloader()
-    data.parse_region_data('PHA')
+    ret = data.get_list(['PHA','KVK','MSK'])
+    print(type(ret))
 
 
 
