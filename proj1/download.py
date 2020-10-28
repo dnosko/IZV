@@ -7,8 +7,8 @@ class DataDownloader:
     cookies = {}
     headers = {}
     cache = {} 
-    regions = {'PHA':0,'STC':1,'JHC':2,'PLK':3,'KVK':19,'ULK':4,'LBK':18,
-               'HKK':5,'PAK':17,'OLK':14,'MSK':7,'JHM':6,'ZLK':15,'VYS':16}
+    regions = {'PHA':'00','STC':'01','JHC':'02','PLK':'03','KVK':'19','ULK':'04','LBK':'18',
+               'HKK':'05','PAK':'17','OLK':'14','MSK':'07','JHM':'06','ZLK':'15','VYS':'16'}
     """ = ['Region','ID','Čas','Lokalita','Druh nehody','Druh zrážky','Druh prekážky',
                'Charakter','Zavinenie','Alkohol','Príčina','Následky','Celková škoda',
                'Druh povrchu vozovky','Stav povrchu vozovky','Stav komunikácie',
@@ -83,13 +83,19 @@ class DataDownloader:
             self.download_data()
         
 
-        region_f = '0'+ str(self.regions[region])+'.csv'
+        region_f = str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
         
-        self.columns = list(self.columns)
+        columns = list(self.columns)
+        columns.insert(0,region)
+        np.transpose(data)
+        print("LEN \n\n\n\n\n",len(columns), len(data))
+        print(columns)
+        print("##############\n\n\n\n\n\n")
+        print(data)
         
 
-        return ([region, self.columns],data) 
+        return (columns,data) 
 
 
     def process_folder(self,file_name):
@@ -111,6 +117,8 @@ class DataDownloader:
                             break
             except zipfile.BadZipFile:
                 pass
+            except KeyError:
+                continue
 
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
@@ -210,6 +218,8 @@ class DataDownloader:
         """ If param regions = None, print all regions except PHK"""
 
         process_regs = []
+        names_lst = []
+        data_lst = []
 
         if not regions: 
             process_regs = list(self.regions.keys())[1:] #all regions except prague
@@ -219,18 +229,21 @@ class DataDownloader:
         for reg in process_regs:
             if reg in self.cache:
                 region_data =  self.cache[reg]
+                print('########1######',region_data)
             elif os.path.exists(self.cache_filename.format(reg)):
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
+                print('#####2#######',region_data)
             else:
-                try:
-                    region_data = self.parse_region_data(reg)
-                except KeyError:
-                    pass
-                finally:
-                    self.cache.update({reg : region_data}) # save to class attribute
-                    self.pickle_file(reg,region_data) #pickle file
-        
+                region_data = self.parse_region_data(reg)
+                self.cache.update({reg : region_data}) # save to class attribute
+                self.pickle_file(reg,region_data) #pickle file
+                print('#########3#########',region_data)
+
+            names_lst.append(region_data[0])
+            data_lst.append(region_data[1])
+
+        print(names_lst)    
         return region_data
 
     
@@ -256,8 +269,9 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    ret = data.get_list(['PHA','KVK','MSK'])
-    print(ret)
+    #data.parse_region_data('MSK')
+    ret = data.get_list(['PHA']) #,'KVK','MSK'
+    #print(ret[0])
 
 
 
