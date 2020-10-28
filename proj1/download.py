@@ -83,6 +83,8 @@ class DataDownloader:
 
 
     def parse_region_data(self,region):
+        """ Function processes data for given region. Returns (list, np.array), where
+            list contains names of columns and np.array data """
 
         if not os.listdir(self.folder):
             self.download_data()
@@ -92,23 +94,31 @@ class DataDownloader:
 
         region_f = '0'+ str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
+        
+        return (self.columns,data) 
 
 
     def process_folder(self,file_name):
 
-        data = []
+        data = {}
+
         for zfile in os.listdir(self.folder): 
             with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
                 #TODO odstranit prazdne subory 7-13  ??
                 with zf.open(file_name,'r') as csv_f:
                     for line in csv_f:
                         clean_line = self.parse_line(line)
-                        data.append(clean_line)
-                        #break    
+                        
+                        #add to dictionary if it's not already there
+                        if clean_line['p1'] not in data:
+                            data.update({clean_line['p1'] : clean_line})
+                            
+                        break
 
-        data = self.check_duplicates(data)
+        # make array out of dict
+        arr = np.array(list([item.values() for item in data.values()]))
 
-        return (self.columns,data)
+        return arr
 
 
     def check_duplicates(self, data):
@@ -129,8 +139,6 @@ class DataDownloader:
         # Create a dictionary from list
         zipbObj = zip(self.col_dic, splitted)
         line_dic = dict(zipbObj)
-        #print('#DEBUG#')
-        #print(line_dic)
         
         return self.cleanup(line_dic)
 
@@ -189,10 +197,13 @@ class DataDownloader:
             if a == '':
                 continue
             line[i] = float(a.replace(",","."))
-           
-        print(type(line[i]))
 
         return line
+    
+    
+    def parse_date(self,line):
+        """ Parses date into new dictionary of year, month, day """
+        pass
 
 
     def get_list(self, regions = None):
