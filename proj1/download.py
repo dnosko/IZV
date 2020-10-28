@@ -218,22 +218,20 @@ class DataDownloader:
             process_regs = regions
 
         for reg in process_regs:
-            print('DEBUG',reg)
             if reg in self.cache:
-                #ret_tuple = zip(ret_tuple,self.cache[reg])
                 return self.cache[reg]
             elif os.path.exists(self.cache_filename.format(reg)):
-                print('debug')
-                #ak je v cache subore, nacita vysledok odtialto, ulozi do cache a vrati
-                self.unpickle_file(reg)
+                region_data = self.unpickle_file(reg)
+                self.cache.update({reg : region_data})
+                return region_data
             else:
                 try:
-                    processed = self.parse_region_data(reg)
+                    region_data = self.parse_region_data(reg)
                 except KeyError:
                     pass
                 finally:
-                    self.cache.update({reg : processed}) # save to class attribute
-                    self.pickle_file(reg,processed) #pickle file
+                    self.cache.update({reg : region_data}) # save to class attribute
+                    self.pickle_file(reg,region_data) #pickle file
 
     
     def pickle_file(self,region, tuple_val):
@@ -247,12 +245,14 @@ class DataDownloader:
             
 
     def unpickle_file(self,region):
+        """ Function ungzips and unpickles file and returns  data from the pickle file"""
 
         f = self.cache_filename.format(region)
         
         with gzip.open(f,'rt') as gzip_f:
             with open('data.pkl','rb') as f:
-                print(pickle.load(f))
+                return pickle.load(f)
+
 
 if __name__ == "__main__":
     data = DataDownloader()
