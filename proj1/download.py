@@ -238,21 +238,21 @@ class DataDownloader:
         for reg in process_regs:
             if reg in self.cache:
                 region_data =  self.cache[reg]
-                print('########1######',region_data)
+                print('########1######')
             elif os.path.exists(self.cache_filename.format(reg)):
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
-                print('#####2#######',region_data)
+                print('#####2#######')
             else:
                 region_data = self.parse_region_data(reg)
                 self.cache.update({reg : region_data}) # save to class attribute
                 self.pickle_file(reg,region_data) #pickle file
-                print('#########3#########',region_data)
+                print('#########3#########')
 
             names_lst.append(region_data[0])
             data_lst.append(region_data[1])
 
-        print(names_lst)    
+            
         return region_data
 
     
@@ -278,8 +278,9 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    data.parse_region_data('PHA')
-    #ret = data.get_list(['PHA']) #,'KVK','MSK'
+    #data.parse_region_data('PHA')
+    ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
+    ret = data.get_list(['PHA'])
     #print(ret[0])
 
 
