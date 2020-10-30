@@ -88,12 +88,10 @@ class DataDownloader:
         
         columns = list(self.columns)
         columns.insert(0,region)
-        np.transpose(data)
+        data = list(data)
         print("LEN \n\n\n\n\n",len(columns), len(data))
         print(columns)
         print("##############\n\n\n\n\n\n")
-        print(data)
-        
 
         return (columns,data) 
 
@@ -114,7 +112,7 @@ class DataDownloader:
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
                                 
-                        break       
+                            break       
                             
             except zipfile.BadZipFile:
                 pass
@@ -125,16 +123,13 @@ class DataDownloader:
         
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-
-        return arr
-
-
-    def check_duplicates(self, data):
-
-        seen = set()
-        data = [x for x in data if x[0] not in seen and not seen.add(x[0])]
-
-        return data
+        new = np.zeros(shape=(65,len(arr)))
+        for col in range(len(arr)):
+            a = arr[:,col]
+            print(a)
+           # np.append(new,a,axis=0)
+        print(new)
+        #return arr
 
 
     def parse_line(self,line):
@@ -181,9 +176,9 @@ class DataDownloader:
         hour = col[:2]
         min = col[2:]
 
-        if hour == 25:
-            col = ''
-        if min == 60:
+        if int(hour) == 25:
+            hour = 'XX'
+        if int(min) == 60:
             min = 'XX'
 
         return hour + ':' + min
