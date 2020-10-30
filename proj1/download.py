@@ -47,8 +47,9 @@ class DataDownloader:
         
         for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
             data = s.get(self.url+link['href'])
-            open(link['href'],'wb').write(data.content)
-            print("DEBUG DOWNLOAD")
+            if data not in os.listdir(self.folder):
+                print("DEBUG DOWNLOAD")
+                open(link['href'],'wb').write(data.content)
  
 
     def set_connection(self):
@@ -101,7 +102,6 @@ class DataDownloader:
         for zfile in os.listdir(self.folder):
             try:
                 with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
-                    #TODO odstranit prazdne subory 7-13  ??
                     with zf.open(file_name,'r') as csv_f:
                         for line in csv_f:
                             clean_line = list(self.parse_line(line))
@@ -109,7 +109,7 @@ class DataDownloader:
                             #add to dictionary if it's not already there
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
-                            break
+                            
 
             except zipfile.BadZipFile:
                 continue       
@@ -156,7 +156,7 @@ class DataDownloader:
 
         line = self.replace_quotes(line)
 
-        line = self.clean_date(line)
+        #line = self.clean_date(line)
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
         line = self.change_to_float(['d','e','f','g'],line)
@@ -278,8 +278,7 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    #data.parse_region_data('PHA')
-    ret = data.get_list(['KVK','PHA','MSK']) #,'KVK','MSK'
+    ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
     print('Stĺpce:',ret[0])
     print('Počet záznamov:',len(ret[1][0]))
     print('Kraje:',set(ret[1][0]))
