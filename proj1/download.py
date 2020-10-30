@@ -87,11 +87,9 @@ class DataDownloader:
         data = self.process_folder(region_f)
         
         columns = list(self.columns)
-        columns.insert(0,region)
-        data = list(data)
-        print("LEN \n\n\n\n\n",len(columns), len(data))
-        print(columns)
-        print("##############\n\n\n\n\n\n")
+        columns.insert(0,"region")
+        region_arr = np.repeat(region,len(data[1]))
+        data = np.insert(data,0,region_arr,0) #insert name of region
 
         return (columns,data) 
 
@@ -119,30 +117,25 @@ class DataDownloader:
             except KeyError:
                 continue
 
-
         
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-        print("LEN********\n\n",len(arr))
+        
         #create empty arr
-        new = np.empty(shape=(len(self.columns),len(arr)))
-        for col in range(len(self.columns)):
-            a = arr[:,col]
-            print(a)
-            #np.put(new,col,a)
-        #print(new)
-
-        #return self.reshape_arr(arr,len(self.columns),len(arr))
+        new  = self.reshape_arr(arr,len(self.columns),len(arr))
+        
+        
+        return np.array(new)
 
 
     def reshape_arr(self,arr,x, y):
-        """ reshapes numpy array to desired size"""
+        """ reshapes numpy array to list of desired shape"""
 
-        new = np.zeros(shape=(x,y)) 
+        new = []
         for col in range(x):
             a = arr[:,col]
-            np.append(new,a)
-
+            new.append(list(a))
+        
         return new
 
 
