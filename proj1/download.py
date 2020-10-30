@@ -108,28 +108,31 @@ class DataDownloader:
                     #TODO odstranit prazdne subory 7-13  ??
                     with zf.open(file_name,'r') as csv_f:
                         for line in csv_f:
-                            clean_line = self.parse_line(line)
-                            
+                            clean_line = list(self.parse_line(line))
+
                             #add to dictionary if it's not already there
-                            if clean_line['p1'] not in data:
-                                data.update({clean_line['p1'] : clean_line})
+                            if clean_line[0] not in data:
+                                data.update({clean_line[0] : clean_line})
                                 
-                            break
+                        break       
+                            
             except zipfile.BadZipFile:
                 pass
             except KeyError:
                 continue
 
+
+        
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-        
+
         return arr
 
 
     def check_duplicates(self, data):
 
         seen = set()
-        data = [x for x in data if x['p1'] not in seen and not seen.add(x['p1'])]
+        data = [x for x in data if x[0] not in seen and not seen.add(x[0])]
 
         return data
 
@@ -144,8 +147,9 @@ class DataDownloader:
         # Create a dictionary from list
         zipbObj = zip(self.columns, splitted)
         line_dic = dict(zipbObj)
-        
-        return self.cleanup(line_dic)
+        line_dic = self.cleanup(line_dic)
+
+        return line_dic.values()
 
 
     def cleanup(self, line):
@@ -269,8 +273,8 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    #data.parse_region_data('MSK')
-    ret = data.get_list(['PHA']) #,'KVK','MSK'
+    data.parse_region_data('PHA')
+    #ret = data.get_list(['PHA']) #,'KVK','MSK'
     #print(ret[0])
 
 
