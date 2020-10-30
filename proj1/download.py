@@ -99,7 +99,7 @@ class DataDownloader:
         data = {}
 
         for zfile in os.listdir(self.folder):
-            try: 
+            try:
                 with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
                     #TODO odstranit prazdne subory 7-13  ??
                     with zf.open(file_name,'r') as csv_f:
@@ -109,14 +109,11 @@ class DataDownloader:
                             #add to dictionary if it's not already there
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
-                                    
                             break
-
+                        
             except zipfile.BadZipFile:
-                pass
-            except KeyError:
-                continue
-
+                continue       
+                            
         
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
@@ -258,14 +255,14 @@ class DataDownloader:
                 print('ONE',np.shape(linked))             
             else:
                 #print(linked[0])
-                res = np.concatenate((linked,region_data[1]),axis=1)
+                linked = np.concatenate((linked,region_data[1]),axis=1)
                 print('TWO')
                 #print(res)
             
             print(linked)
 
             
-        return (region_data[0],res)
+        return (region_data[0],linked)
 
     
     def pickle_file(self,region, tuple_val):
@@ -291,7 +288,7 @@ class DataDownloader:
 if __name__ == "__main__":
     data = DataDownloader()
     #data.parse_region_data('PHA')
-    ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
+    ret = data.get_list(['KVK','PHA','MSK']) #,'KVK','MSK'
     print('Stĺpce:',ret[0])
     print('Počet záznamov:',len(ret[1][0]))
     print('Kraje:',set(ret[1][0]))
