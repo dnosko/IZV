@@ -124,18 +124,24 @@ class DataDownloader:
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
         print("LEN********\n\n",len(arr))
+        #create empty arr
+        new = np.empty(shape=(len(self.columns),len(arr)))
+        for col in range(len(self.columns)):
+            a = arr[:,col]
+            print(a)
+            #np.put(new,col,a)
+        #print(new)
 
-        return self.reshape_arr(arr,len(self.columns))
+        #return self.reshape_arr(arr,len(self.columns),len(arr))
 
 
-    def reshape_arr(self,arr,size):
+    def reshape_arr(self,arr,x, y):
         """ reshapes numpy array to desired size"""
 
-        new = np.zeros(shape=(size,6)) 
-        for col in range(size):
+        new = np.zeros(shape=(x,y)) 
+        for col in range(x):
             a = arr[:,col]
             np.append(new,a)
-        print(new)
 
         return new
 
@@ -160,6 +166,7 @@ class DataDownloader:
 
         line = self.replace_quotes(line)
 
+        line = self.clean_date(line)
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
         line = self.change_to_float(['d','e','f','g'],line)
@@ -178,18 +185,18 @@ class DataDownloader:
 
     def clean_time(self,col):
         """ Cleans column with time, when hour is unknown set value to empty,
-            if only minutes are unknown set them to XX. 
+            if only minutes are unknown set them to -1. 
             Sets to HH:MM format """
 
         hour = col[:2]
         min = col[2:]
 
         if int(hour) == 25:
-            hour = 'XX'
+            return '-1'
         if int(min) == 60:
-            min = 'XX'
+            min = '-1'
 
-        return hour + ':' + min
+        return hour + min
 
 
     def clean_XX(self,col):
@@ -216,9 +223,11 @@ class DataDownloader:
         return line
     
     
-    def parse_date(self,line):
-        """ Parses date into new dictionary of year, month, day """
-        pass
+    def clean_date(self,line):
+        """ Makes one int in YYYYMMDD format """
+        line['p2a'] = int(line['p2a'].replace("-",''))
+        
+        return line
 
 
     def get_list(self, regions = None):
