@@ -109,9 +109,9 @@ class DataDownloader:
                             #add to dictionary if it's not already there
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
-                                
-                            break       
-                            
+                                    
+                            break
+
             except zipfile.BadZipFile:
                 pass
             except KeyError:
@@ -227,8 +227,8 @@ class DataDownloader:
         """ If param regions = None, print all regions except PHK"""
 
         process_regs = []
-        names_lst = []
         data_lst = []
+        linked = np.zeros(shape=(2,2))
 
         if not regions: 
             process_regs = list(self.regions.keys())[1:] #all regions except prague
@@ -238,22 +238,34 @@ class DataDownloader:
         for reg in process_regs:
             if reg in self.cache:
                 region_data =  self.cache[reg]
-                print('########1######')
+                print('DEBUG########1######',region_data[1])
             elif os.path.exists(self.cache_filename.format(reg)):
+                #TODO nefunguje berie vsetko iba ze je MSK???
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
-                print('#####2#######')
+                print('DEBUG#####2#######',region_data[1][0])
             else:
                 region_data = self.parse_region_data(reg)
                 self.cache.update({reg : region_data}) # save to class attribute
                 self.pickle_file(reg,region_data) #pickle file
-                print('#########3#########')
-
-            names_lst.append(region_data[0])
-            data_lst.append(region_data[1])
+                print('DEBUG#########3#########',region_data[1][0])
 
             
-        return region_data
+            #print(region_data)
+            if np.count_nonzero(linked) == 0:
+                linked = region_data[1].flatten()
+                linked = np.reshape(linked,(65,-1))
+                print('ONE',np.shape(linked))             
+            else:
+                #print(linked[0])
+                res = np.concatenate((linked,region_data[1]),axis=1)
+                print('TWO')
+                #print(res)
+            
+            print(linked)
+
+            
+        return (region_data[0],res)
 
     
     def pickle_file(self,region, tuple_val):
@@ -262,7 +274,7 @@ class DataDownloader:
         f = self.cache_filename.format(region)
         
         with gzip.open(f,'wt') as gzip_f:
-            with open('data.pkl','wb') as pickle_f:
+            with open('data'+region+'.pkl','wb') as pickle_f:
                 pickle.dump(tuple_val,pickle_f)
             
 
@@ -272,7 +284,7 @@ class DataDownloader:
         f = self.cache_filename.format(region)
         
         with gzip.open(f,'rt') as gzip_f:
-            with open('data.pkl','rb') as f:
+            with open('data'+region+'.pkl','rb') as f:
                 return pickle.load(f)
 
 
@@ -280,9 +292,9 @@ if __name__ == "__main__":
     data = DataDownloader()
     #data.parse_region_data('PHA')
     ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
-    ret = data.get_list(['PHA'])
-    #print(ret[0])
-
+    print('Stĺpce:',ret[0])
+    print('Počet záznamov:',len(ret[1][0]))
+    print('Kraje:',set(ret[1][0]))
 
 
 
