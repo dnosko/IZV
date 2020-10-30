@@ -110,7 +110,7 @@ class DataDownloader:
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
                             break
-                        
+
             except zipfile.BadZipFile:
                 continue       
                             
@@ -235,31 +235,22 @@ class DataDownloader:
         for reg in process_regs:
             if reg in self.cache:
                 region_data =  self.cache[reg]
-                print('DEBUG########1######',region_data[1])
             elif os.path.exists(self.cache_filename.format(reg)):
-                #TODO nefunguje berie vsetko iba ze je MSK???
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
-                print('DEBUG#####2#######',region_data[1][0])
             else:
                 region_data = self.parse_region_data(reg)
                 self.cache.update({reg : region_data}) # save to class attribute
                 self.pickle_file(reg,region_data) #pickle file
-                print('DEBUG#########3#########',region_data[1][0])
 
             
-            #print(region_data)
+            #concat arrays
             if np.count_nonzero(linked) == 0:
                 linked = region_data[1].flatten()
-                linked = np.reshape(linked,(65,-1))
-                print('ONE',np.shape(linked))             
+                linked = np.reshape(linked,(65,-1))          
             else:
-                #print(linked[0])
                 linked = np.concatenate((linked,region_data[1]),axis=1)
-                print('TWO')
-                #print(res)
             
-            print(linked)
 
             
         return (region_data[0],linked)
