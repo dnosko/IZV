@@ -123,13 +123,21 @@ class DataDownloader:
         
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-        new = np.zeros(shape=(65,len(arr)))
-        for col in range(len(arr)):
+        print("LEN********\n\n",len(arr))
+
+        return self.reshape_arr(arr,len(self.columns))
+
+
+    def reshape_arr(self,arr,size):
+        """ reshapes numpy array to desired size"""
+
+        new = np.zeros(shape=(size,6)) 
+        for col in range(size):
             a = arr[:,col]
-            print(a)
-           # np.append(new,a,axis=0)
+            np.append(new,a)
         print(new)
-        #return arr
+
+        return new
 
 
     def parse_line(self,line):
