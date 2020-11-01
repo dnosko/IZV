@@ -292,9 +292,10 @@ class DataDownloader:
         """ Function ungzips and unpickles file and returns  data from the pickle file"""
 
         f = self.cache_filename.format(region)
-        with gzip.open(f,'rt') as gzip_f:
-            with open(f,'rb') as f:
-                return pickle.load(f)
+        gfile = gzip.GzipFile(f, 'rb')
+        dataa =  gfile.read()
+        data = pickle.loads(dataa)
+        gfile.close()
 
         return data
 
