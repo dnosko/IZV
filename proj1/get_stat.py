@@ -2,6 +2,7 @@
 from download import DataDownloader
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def plot_stat(data_source, fig_location = None, show_figure = False):
     
@@ -10,12 +11,11 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     date = data_source[1][4]
     
     # count occurances for each region
-    regions = [] #list of regions in dataset
+    regions = set(region) #set of regions in dataset
     i = 0
     dic_years = {}
     while i < len(region):
         count = np. count_nonzero(region==region[i]) + i
-        regions.append(region[i])
         #get dates from region only
         region_dates = date[i:count] 
 
@@ -41,7 +41,9 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     #for year in dic_years.keys():
     #    dic_years[year] = sorted(dic_years[year], key=lambda x: x[1],reverse=True)
     
-    fig, axes = plt.subplots(ncols=3, nrows=2,constrained_layout=True,figsize=(10,4))
+    num_cols = int(len(regions) / 2) +1
+    print('rows',num_cols)
+    fig, axes = plt.subplots(ncols=num_cols, nrows=2,constrained_layout=True,figsize=(11,8))
     print_x = []
     print_y = []
     header = []
@@ -51,26 +53,36 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         print_y.append([y for (x, y) in dic_years[year]])
         print_x.append([x for (x, y) in dic_years[year]])
     
+
     i = 0
-    print(len(print_y))
     for ax in axes.reshape(-1):
         try:
             y = print_y[i]
             x = print_x[i]
-            ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
+            bar = ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
             ax.set_title(header[i])
             i = i + 1
         except IndexError:
-            break
+            pass
+        for rect in bar: #nie vysku ale cisla 1.2.3 ..
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width()/2., height*0.9,
+                '%d' % int(height),
+                ha='center', va='bottom')
+    
         
     
     if show_figure:
         plt.show()
 
     if fig_location: #TODO
-        plt.savefig(fig_location+'/graphs.png')
+        output_path = os.path.join(fig_location+'/graphs.png')
+        plt.savefig(output_path)
+
+
+
 
 
 if __name__ == "__main__":
-    plot_stat(DataDownloader().get_list(['MSK','PHA','OLK']),fig_location='/data',show_figure=True)
+    plot_stat(DataDownloader().get_list(['MSK','PHA','OLK','PAK']),fig_location='data',show_figure=True)
     
