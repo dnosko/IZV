@@ -108,10 +108,12 @@ class DataDownloader:
         print("DEBUG parse_region")
 
         columns = list(self.columns)
+        print("DEBUG1 parse_region")
         columns.insert(0,"region")
         region_arr = np.repeat(region,len(data[1]))
+        print("DEBUG2 parse_region")
         data = np.insert(data,0,region_arr,0) #insert name of region
-
+        print(data)
         print("DEBUG parse_region")
         return (columns,data) 
 
@@ -119,11 +121,13 @@ class DataDownloader:
     def process_folder(self,file_name):
 
         data = {}
-        print('DEBUG PROCESS FOLDER')
+        #TODO opravit tento list
         last_files = ['datagis2016.zip','datagis-rok-2017.zip','datagis-rok-2018.zip',
-                         'datagis-rok-2019.zip','datagis-{}-2020.zip']
+                         'datagis-rok-2019.zip','datagis-01-2020.zip','datagis-02-2020.zip',
+                         'datagis-03-2020.zip','datagis-04-2020.zip','datagis-05-2020.zip',
+                         'datagis-06-2020.zip','datagis-07-2020.zip','datagis-08-2020.zip',
+                         'datagis-09-2020.zip']
         for zfile in os.listdir(self.folder):
-            #TODO zobrat iba posledny subor z kazdeho roku
             if zfile in last_files:
                 try:
                     with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
@@ -132,23 +136,17 @@ class DataDownloader:
                                 clean_line = list(self.parse_line(line))
                                 #add to dictionary if it's not already there
                                 if clean_line[0] not in data:
-                                    data.update({clean_line[0] : clean_line})
-                                #break    
+                                    data.update({clean_line[0] : clean_line}) 
                                 
                 except zipfile.BadZipFile:
-                    print('BAD ZIP')
                     continue       
                             
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-        #print(arr)
 
         new = arr.transpose()
-        #print('hm',new)
-        print('arr')
-        print("DEBUG PROCESS FOLDER END")
-        return new
 
+        return new
 
 
     def parse_line(self,line):
@@ -278,20 +276,13 @@ class DataDownloader:
     
     def pickle_file(self,region, tuple_val):
         """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
-        #TODO uklada do zlej zlozky!!!!!
-        print("Dpickle list")
+        
         f = self.cache_filename.format(region)
-        #with open(f,'wb') as pickle_f:
-        with gzip.GzipFile(f,'wb') as gfile:
-                 print(gfile)
-                 pickle.dump(tuple_val, gfile)
-                 print('wtf')
-                 gfile.close()
-                #pickle.dump(tuple_val, gfile)
-        #gfile = gzip.open(f+'.pkl.gz','wt')
-        #pickle.dump(tuple_val,gfile)
-        print('here')
-        #gfile.close()
+        print('wtf')
+        gfile =  gzip.GzipFile(f,'wb')
+        print(gfile)
+        pickle.dump(tuple_val, gfile)
+        gfile.close()
 
             
 
