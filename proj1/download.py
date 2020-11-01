@@ -176,7 +176,7 @@ class DataDownloader:
 
         line = self.replace_quotes(line)
 
-        #line = self.clean_date(line)
+        line = self.clean_date(line)
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
         line = self.change_to_float(['d','e','f','g'],line)

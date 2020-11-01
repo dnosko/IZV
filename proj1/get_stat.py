@@ -12,6 +12,21 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     #potrebujem si podelit(slice) tu numpy array na zaklade poctu nazvu daneho kraja.
     #zoradit roky a spocitat
     
+    # count occurances for each region
+    i = 0
+    while i < len(region):
+        count = np. count_nonzero(region==region[i]) + i
+        print(region[i],"count:",count-i)
+        if len(date[i:count]) == 0: #end of array
+            region_dates = date[i:]
+            print(region_dates)
+            break
+        else:
+            region_dates = date[i:count]
+            print(date[i:count])
+        i = count
+    print(region)
+    print(date)
 
     x = np.linspace(0,20,100)
     fig = plt.figure(figsize=(6,4))
@@ -23,6 +38,7 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     plt.show()
 
 
+
 if __name__ == "__main__":
-    plot_stat(DataDownloader().get_list(['PHA']))
+    plot_stat(DataDownloader().get_list(['PHA','PLK','ULK']))
     
