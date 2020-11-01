@@ -38,29 +38,39 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         i = count
 
     #sort arrays descending toto netreba :))) iba priradit cisla nad grafy podla poradia
-    for year in dic_years.keys():
-        dic_years[year] = sorted(dic_years[year], key=lambda x: x[1],reverse=True)
+    #for year in dic_years.keys():
+    #    dic_years[year] = sorted(dic_years[year], key=lambda x: x[1],reverse=True)
     
     fig, axes = plt.subplots(ncols=3, nrows=2,constrained_layout=True,figsize=(10,4))
-    #print_x = []
-    #print_y = []
+    print_x = []
+    print_y = []
     header = []
     #get x and y lists for graphs
     for year in dic_years.keys():
-        for ax in axes.reshape(-1):
-            print_y = [y for (x, y) in dic_years[year]]
-            print_x = [x for (x, y) in dic_years[year]]
-            ax.bar(print_x, print_y, width=0.7, bottom=0, align='center',color='C3')
-            continue
+        header.append(year)
+        print_y.append([y for (x, y) in dic_years[year]])
+        print_x.append([x for (x, y) in dic_years[year]])
     
+    i = 0
+    print(len(print_y))
+    for ax in axes.reshape(-1):
+        try:
+            y = print_y[i]
+            x = print_x[i]
+            ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
+            ax.set_title(header[i])
+            i = i + 1
+        except IndexError:
+            break
+        
     
-    #for ax in axes.reshape(-1):
-    #    ax.bar(print_x[i], print_y[i], width=0.7, bottom=0, align='center',color='C3')
-    #    i = i + 1
-    
-    plt.show()
+    if show_figure:
+        plt.show()
+
+    if fig_location: #TODO
+        plt.savefig(fig_location+'/graphs.png')
 
 
 if __name__ == "__main__":
-    plot_stat(DataDownloader().get_list(['MSK','PHA']))
+    plot_stat(DataDownloader().get_list(['MSK','PHA','OLK']),fig_location='/data',show_figure=True)
     
