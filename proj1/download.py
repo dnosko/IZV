@@ -32,26 +32,6 @@ class DataDownloader:
         self.set_connection()
 
 
-    def create_folder(self,folder):
-        try:
-            os.mkdir(folder)
-        except FileExistsError:
-            pass
-
-
-    def download_data(self):
-
-        s = requests.Session() 
-        data = s.get(self.url, headers=self.headers, cookies=self.cookies).text
-        soup = BeautifulSoup(data, features="lxml")
-        
-        for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
-            data = s.get(self.url+link['href'])
-            if data not in os.listdir(self.folder):
-                print("DEBUG DOWNLOAD")
-                open(link['href'],'wb').write(data.content)
- 
-
     def set_connection(self):
         """ sets cookies and header for url request """
 
@@ -75,6 +55,45 @@ class DataDownloader:
         }
 
 
+    def create_folder(self,folder):
+
+        try:
+            os.mkdir(folder)
+        except FileExistsError:
+            pass
+
+
+    def download_data(self):
+
+        s = requests.Session() 
+        data = s.get(self.url, headers=self.headers, cookies=self.cookies).text
+        soup = BeautifulSoup(data, features="lxml")
+
+        for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
+            data = s.get(self.url+link['href'])
+            if data not in os.listdir(self.folder):
+                print("DEBUG DOWNLOAD")
+                open(link['href'],'wb').write(data.content)
+ 
+    #TODO
+    def get_years(self,soup):
+        """ Function returns list of years on website """
+        years = []
+        tr = soup.find_all('tr')[0::12] #every 12th row has year
+        for i in tr:
+            td = i.find_all('td')
+            years.append(td[0].getText())
+            
+        return years
+    
+    #TODO
+    def get_last_month(self,year,soup):
+        """ returns last month zip """
+        td = soup.find_all('td')
+        for i in td:
+            #if i.find(text=("Prosinec {}")):
+            pass
+        
 
     def parse_region_data(self,region):
         """ Function processes data for given region. Returns (list, np.array), where
@@ -100,6 +119,7 @@ class DataDownloader:
         data = {}
 
         for zfile in os.listdir(self.folder):
+            #TODO zobrat iba posledny subor z kazdeho roku
             try:
                 with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
                     with zf.open(file_name,'r') as csv_f:
@@ -109,7 +129,7 @@ class DataDownloader:
                             #add to dictionary if it's not already there
                             if clean_line[0] not in data:
                                 data.update({clean_line[0] : clean_line})
-                            
+                            break #DEBUG
 
             except zipfile.BadZipFile:
                 continue       
@@ -258,30 +278,33 @@ class DataDownloader:
     
     def pickle_file(self,region, tuple_val):
         """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
-
+        #TODO uklada do zlej zlozky!!!!!
         f = self.cache_filename.format(region)
         
-        with gzip.open(f,'wt') as gzip_f:
-            with open('data'+region+'.pkl','wb') as pickle_f:
-                pickle.dump(tuple_val,pickle_f)
+        #with open(self.folder+'/data'+region+'.pkl','wb') as pickle_f:
+        gfile = gzip.GzipFile(f, 'wb')
+        gfile.write(pickle.dumps(tuple_val, 0))
+        gfile.close()
+
             
 
     def unpickle_file(self,region):
         """ Function ungzips and unpickles file and returns  data from the pickle file"""
 
         f = self.cache_filename.format(region)
-        
         with gzip.open(f,'rt') as gzip_f:
-            with open('data'+region+'.pkl','rb') as f:
+            with open(f,'rb') as f:
                 return pickle.load(f)
+
+        return data
 
 
 if __name__ == "__main__":
     data = DataDownloader()
-    ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
-    print('Stĺpce:',ret[0])
-    print('Počet záznamov:',len(ret[1][0]))
-    print('Kraje:',set(ret[1][0]))
+    #ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
+    #print('Stĺpce:',ret[0])
+    #print('Počet záznamov:',len(ret[1][0]))
+    #print('Kraje:',set(ret[1][0]))
 
 
 
