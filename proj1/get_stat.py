@@ -8,10 +8,6 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     #print(data_source[0]) stĺpce
     region = data_source[1][0]
     date = data_source[1][4]
-    print('HERE')
-
-    #potrebujem si podelit(slice) tu numpy array na zaklade poctu nazvu daneho kraja.
-    #zoradit roky a spocitat
     
     # count occurances for each region
     regions = [] #list of regions in dataset
@@ -31,8 +27,7 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         for year in years:
             year_cnt = np.count_nonzero(only_years==year)
             cnt_lst.append(year_cnt)
-            print(year)
-        print(cnt_lst)
+        
         year_ind = 0
         for year in years:
             if year not in dic_years:
@@ -42,18 +37,28 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
             
         i = count
 
-    #sort arrays descending
+    #sort arrays descending toto netreba :))) iba priradit cisla nad grafy podla poradia
     for year in dic_years.keys():
         dic_years[year] = sorted(dic_years[year], key=lambda x: x[1],reverse=True)
     
-    #fig, axes = plt.subplots(ncols=3, nrows=2,constrained_layout=True,figsize=(8,4))
-    #(ax1,ax2,ax3),(ax4,ax5,ax6) = axes
+    fig, axes = plt.subplots(ncols=3, nrows=2,constrained_layout=True,figsize=(10,4))
+    #print_x = []
+    #print_y = []
+    header = []
+    #get x and y lists for graphs
     for year in dic_years.keys():
-        yrs_val = [y for (x, y) in dic_years[year]]
-        print('vals',yrs_val)
-    #ax1.bar(regions, yrs_val, width=0.7, bottom=0, align='center',color='C3')
-    #ax2.bar(regions, yrs_val, width=0.7, bottom=0, align='center',color='C3')
-    #plt.show()
+        for ax in axes.reshape(-1):
+            print_y = [y for (x, y) in dic_years[year]]
+            print_x = [x for (x, y) in dic_years[year]]
+            ax.bar(print_x, print_y, width=0.7, bottom=0, align='center',color='C3')
+            continue
+    
+    
+    #for ax in axes.reshape(-1):
+    #    ax.bar(print_x[i], print_y[i], width=0.7, bottom=0, align='center',color='C3')
+    #    i = i + 1
+    
+    plt.show()
 
 
 if __name__ == "__main__":

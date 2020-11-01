@@ -278,7 +278,7 @@ class DataDownloader:
             else:
                 print("DEBUG concat2")
                 linked = np.concatenate((linked,region_data[1]),axis=1)
-                print(linked)
+                
 
         print("DEBUG list")    
         return (region_data[0],list(linked))
