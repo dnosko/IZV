@@ -105,55 +105,50 @@ class DataDownloader:
 
         region_f = str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
-        
+        print("DEBUG parse_region")
+
         columns = list(self.columns)
         columns.insert(0,"region")
         region_arr = np.repeat(region,len(data[1]))
         data = np.insert(data,0,region_arr,0) #insert name of region
 
+        print("DEBUG parse_region")
         return (columns,data) 
 
 
     def process_folder(self,file_name):
 
         data = {}
-
+        print('DEBUG PROCESS FOLDER')
+        last_files = ['datagis2016.zip','datagis-rok-2017.zip','datagis-rok-2018.zip',
+                         'datagis-rok-2019.zip','datagis-{}-2020.zip']
         for zfile in os.listdir(self.folder):
             #TODO zobrat iba posledny subor z kazdeho roku
-            try:
-                with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
-                    with zf.open(file_name,'r') as csv_f:
-                        for line in csv_f:
-                            clean_line = list(self.parse_line(line))
-
-                            #add to dictionary if it's not already there
-                            if clean_line[0] not in data:
-                                data.update({clean_line[0] : clean_line})
-                            break #DEBUG
-
-            except zipfile.BadZipFile:
-                continue       
+            if zfile in last_files:
+                try:
+                    with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
+                        with zf.open(file_name,'r') as csv_f:
+                            for line in csv_f:
+                                clean_line = list(self.parse_line(line))
+                                #add to dictionary if it's not already there
+                                if clean_line[0] not in data:
+                                    data.update({clean_line[0] : clean_line})
+                                #break    
+                                
+                except zipfile.BadZipFile:
+                    print('BAD ZIP')
+                    continue       
                             
-        
         # make array out of dict
         arr = np.array(list([item for item in data.values()]))
-        
-        #create empty arr
-        new  = self.reshape_arr(arr,len(self.columns),len(arr))
-        
-        
-        return np.array(new)
+        #print(arr)
 
-
-    def reshape_arr(self,arr,x, y):
-        """ reshapes numpy array to list of desired shape"""
-
-        new = []
-        for col in range(x):
-            a = arr[:,col]
-            new.append(list(a))
-        
+        new = arr.transpose()
+        #print('hm',new)
+        print('arr')
+        print("DEBUG PROCESS FOLDER END")
         return new
+
 
 
     def parse_line(self,line):
@@ -246,7 +241,7 @@ class DataDownloader:
         process_regs = []
         data_lst = []
         linked = np.zeros(shape=(2,2))
-
+        
         if not regions: 
             process_regs = list(self.regions.keys())[1:] #all regions except prague
         else:
@@ -254,16 +249,21 @@ class DataDownloader:
 
         for reg in process_regs:
             if reg in self.cache:
+                print("DEBUG 1")
                 region_data =  self.cache[reg]
             elif os.path.exists(self.cache_filename.format(reg)):
+                print("DEBUG 2")
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
             else:
+                print("DEBUG 3")
                 region_data = self.parse_region_data(reg)
+                print("Debug 31")
                 self.cache.update({reg : region_data}) # save to class attribute
+                print("Debug 32")
                 self.pickle_file(reg,region_data) #pickle file
 
-            
+            print("DEBUG concat")
             #concat arrays
             if np.count_nonzero(linked) == 0:
                 linked = region_data[1].flatten()
@@ -272,19 +272,26 @@ class DataDownloader:
                 linked = np.concatenate((linked,region_data[1]),axis=1)
             
 
-            
+        print("DEBUG list")    
         return (region_data[0],list(linked))
 
     
     def pickle_file(self,region, tuple_val):
         """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
         #TODO uklada do zlej zlozky!!!!!
+        print("Dpickle list")
         f = self.cache_filename.format(region)
-        
-        #with open(self.folder+'/data'+region+'.pkl','wb') as pickle_f:
-        gfile = gzip.GzipFile(f, 'wb')
-        gfile.write(pickle.dumps(tuple_val, 0))
-        gfile.close()
+        #with open(f,'wb') as pickle_f:
+        with gzip.GzipFile(f,'wb') as gfile:
+                 print(gfile)
+                 pickle.dump(tuple_val, gfile)
+                 print('wtf')
+                 gfile.close()
+                #pickle.dump(tuple_val, gfile)
+        #gfile = gzip.open(f+'.pkl.gz','wt')
+        #pickle.dump(tuple_val,gfile)
+        print('here')
+        #gfile.close()
 
             
 
@@ -302,9 +309,9 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    #ret = data.get_list(['PHA','KVK','MSK']) #,'KVK','MSK'
-    #print('Stĺpce:',ret[0])
-    #print('Počet záznamov:',len(ret[1][0]))
+    ret = data.get_list(['PHA']) #,'KVK','MSK'
+    print('Stĺpce:',ret[0])
+    print('Počet záznamov:',len(ret[1][0]))
     #print('Kraje:',set(ret[1][0]))
 
 
