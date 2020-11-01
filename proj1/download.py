@@ -105,15 +105,13 @@ class DataDownloader:
 
         region_f = str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
-        print("DEBUG parse_region")
 
         columns = list(self.columns)
-        print("DEBUG1 parse_region")
         columns.insert(0,"region")
         region_arr = np.repeat(region,len(data[1]))
-        print("DEBUG2 parse_region")
+        #print("DEBUG2 parse_region",region_arr)
         data = np.insert(data,0,region_arr,0) #insert name of region
-        print(data)
+        #print(data)
         print("DEBUG parse_region")
         return (columns,data) 
 
@@ -278,11 +276,10 @@ class DataDownloader:
         """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
         
         f = self.cache_filename.format(region)
-        print('wtf')
         gfile =  gzip.GzipFile(f,'wb')
-        print(gfile)
         pickle.dump(tuple_val, gfile)
         gfile.close()
+        print('pickle done')
 
             
 
