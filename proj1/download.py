@@ -23,6 +23,12 @@ class DataDownloader:
               'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
               'p57','p58','a','b','d','e','f','g','h','i','j','k','l','n','o','p','q','r','s','t','p5a')
     
+    columns_clean = ('p1','p36','p37','p2a','weekday(p2a)','p2b','p6','p7','p8','p9','p10',
+              'p11','p12','p13a','p13b','p13c','p14','p15',	'p16','p17','p18','p19',
+              'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
+              'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
+              'p57','p58','a','b','d','e','f','g','k','l','n','p','q','r','s','t','p5a')
+    
 
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
@@ -106,7 +112,7 @@ class DataDownloader:
         region_f = str(self.regions[region])+'.csv'
         data = self.process_folder(region_f)
 
-        columns = list(self.columns)
+        columns = list(self.columns_clean)
         columns.insert(0,"region")
         region_arr = np.repeat(region,len(data[1]))
         #print("DEBUG2 parse_region",region_arr)
@@ -166,7 +172,11 @@ class DataDownloader:
         """ Cleans up data values at given line """
 
         line = self.replace_quotes(line)
-
+        del line['h']
+        del line['i']
+        del line['j']
+        del line['o']
+        
         line = self.clean_date(line)
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
@@ -263,10 +273,12 @@ class DataDownloader:
             #concat arrays
             if np.count_nonzero(linked) == 0:
                 linked = region_data[1].flatten()
-                linked = np.reshape(linked,(65,-1))          
+                linked = np.reshape(linked,(len(self.columns_clean)+1,-1))
+                print("DEBUG concat1")          
             else:
+                print("DEBUG concat2")
                 linked = np.concatenate((linked,region_data[1]),axis=1)
-            
+                print(linked)
 
         print("DEBUG list")    
         return (region_data[0],list(linked))
@@ -297,7 +309,7 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    ret = data.get_list(['PHA']) #,'KVK','MSK'
+    ret = data.get_list(['PHA','MSK']) #,'KVK','MSK'
     print('Stĺpce:',ret[0])
     print('Počet záznamov:',len(ret[1][0]))
     #print('Kraje:',set(ret[1][0]))
