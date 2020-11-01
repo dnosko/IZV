@@ -13,17 +13,15 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     #zoradit roky a spocitat
     
     # count occurances for each region
+    # count occurances for each region
     i = 0
     while i < len(region):
         count = np. count_nonzero(region==region[i]) + i
         print(region[i],"count:",count-i)
-        if len(date[i:count]) == 0: #end of array
-            region_dates = date[i:]
-            print(region_dates)
-            break
-        else:
-            region_dates = date[i:count]
-            print(date[i:count])
+        region_dates = date[i:count]
+        print('unsorted',region_dates)
+        sorted_arr = np.sort(date[i:count])
+        print('sorted',sorted_arr)
         i = count
     print(region)
     print(date)
