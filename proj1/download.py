@@ -273,7 +273,7 @@ class DataDownloader:
             
 
             
-        return (region_data[0],linked)
+        return (region_data[0],list(linked))
 
     
     def pickle_file(self,region, tuple_val):
