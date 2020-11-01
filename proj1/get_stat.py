@@ -43,7 +43,7 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
     
     num_cols = int(len(regions) / 2) +1
     print('rows',num_cols)
-    fig, axes = plt.subplots(ncols=num_cols, nrows=2,constrained_layout=True,figsize=(11,8))
+    fig, axes = plt.subplots(ncols=num_cols, nrows=2,constrained_layout=True,figsize=(8,11))
     print_x = []
     print_y = []
     header = []
@@ -66,18 +66,18 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
             pass
         for rect in bar: #nie vysku ale cisla 1.2.3 ..
             height = rect.get_height()
-            ax.text(rect.get_x() + rect.get_width()/2., height*0.9,
+            ax.text(rect.get_x() + rect.get_width()/2., height*0.98,
                 '%d' % int(height),
                 ha='center', va='bottom')
     
-        
+    plt.tight_layout()
+    if fig_location: #TODO
+        output_path = os.path.join(fig_location+'/graphs.png')
+        plt.savefig(output_path)    
     
     if show_figure:
         plt.show()
 
-    if fig_location: #TODO
-        output_path = os.path.join(fig_location+'/graphs.png')
-        plt.savefig(output_path)
 
 
 
