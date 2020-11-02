@@ -81,7 +81,7 @@ def get_order(dic_years,len_seq):
             for index in indexes:
                 a[indexes[index]] = enum[index]
         except IndexError:
-            print('ERR','index',index,'len enum',len(enum),'len indexes', indexes,'len a',len(a))
+            pass
 
         order.append(a)
 
@@ -108,7 +108,6 @@ def plot_graph(axes,print_x,print_y,header,order):
                     ha='center', va='bottom')
                 j = j + 1
         except IndexError:
-            print("INDEX ERR",i)
             pass
     
     plt.tight_layout()

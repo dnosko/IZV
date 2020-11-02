@@ -78,7 +78,6 @@ class DataDownloader:
         for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
             data = s.get(self.url+link['href'])
             if data not in os.listdir(self.folder):
-                print("DEBUG DOWNLOAD")
                 open(link['href'],'wb').write(data.content)
  
     #TODO
@@ -115,10 +114,9 @@ class DataDownloader:
         columns = list(self.columns_clean)
         columns.insert(0,"region")
         region_arr = np.repeat(region,len(data[1]))
-        #print("DEBUG2 parse_region",region_arr)
+
         data = np.insert(data,0,region_arr,0) #insert name of region
-        #print(data)
-        print("DEBUG parse_region")
+
         return (columns,data) 
 
 
@@ -255,32 +253,23 @@ class DataDownloader:
 
         for reg in process_regs:
             if reg in self.cache:
-                print("DEBUG 1")
                 region_data =  self.cache[reg]
             elif os.path.exists(self.cache_filename.format(reg)):
-                print("DEBUG 2")
                 region_data = self.unpickle_file(reg)
                 self.cache.update({reg : region_data})
             else:
-                print("DEBUG 3")
                 region_data = self.parse_region_data(reg)
-                print("Debug 31")
                 self.cache.update({reg : region_data}) # save to class attribute
-                print("Debug 32")
                 self.pickle_file(reg,region_data) #pickle file
 
-            print("DEBUG concat")
             #concat arrays
             if np.count_nonzero(linked) == 0:
                 linked = region_data[1].flatten()
-                linked = np.reshape(linked,(len(self.columns_clean)+1,-1))
-                print("DEBUG concat1")          
+                linked = np.reshape(linked,(len(self.columns_clean)+1,-1))      
             else:
-                print("DEBUG concat2")
                 linked = np.concatenate((linked,region_data[1]),axis=1)
                 
 
-        print("DEBUG list")    
         return (region_data[0],list(linked))
 
     
@@ -291,7 +280,6 @@ class DataDownloader:
         gfile =  gzip.GzipFile(f,'wb')
         pickle.dump(tuple_val, gfile)
         gfile.close()
-        print('pickle done')
 
             
 
@@ -309,10 +297,10 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    ret = data.get_list(['PHA','MSK']) #,'KVK','MSK'
+    ret = data.get_list(['PHA','MSK','KVK'])
     print('Stĺpce:',ret[0])
     print('Počet záznamov:',len(ret[1][0]))
-    #print('Kraje:',set(ret[1][0]))
+    print('Kraje:',set(ret[1][0]))
 
 
 
