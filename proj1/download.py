@@ -1,4 +1,4 @@
-import os, requests, urllib, zipfile, csv, pickle, gzip
+import os, requests, urllib, zipfile, csv, pickle, gzip, re
 import numpy as np
 from bs4 import BeautifulSoup
 
@@ -7,6 +7,7 @@ class DataDownloader:
     cookies = {}
     headers = {}
     cache = {} 
+    files_to_process = [] #last files of year, if year doesnt have last file, then process all 
     regions = {'PHA':'00','STC':'01','JHC':'02','PLK':'03','KVK':'19','ULK':'04','LBK':'18',
                'HKK':'05','PAK':'17','OLK':'14','MSK':'07','JHM':'06','ZLK':'15','VYS':'16'}
     """ = ['Region','ID','Čas','Lokalita','Druh nehody','Druh zrážky','Druh prekážky',
@@ -75,29 +76,26 @@ class DataDownloader:
         data = s.get(self.url, headers=self.headers, cookies=self.cookies).text
         soup = BeautifulSoup(data, features="lxml")
 
+        files_to_process = []
+        years = soup.body.findAll(text=re.compile('Prosinec'))
+        
         for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
+            x = re.search("^.*/datagis.*11.*.zip$",link['href'])
+            if x: #match
+                del years[0]
+                next_a = soup.find('a',href=link['href']).findNext('a')
+                self.files_to_process.append(next_a['href'][5:])
             data = s.get(self.url+link['href'])
             if data not in os.listdir(self.folder):
                 open(link['href'],'wb').write(data.content)
- 
-    #TODO
-    def get_years(self,soup):
-        """ Function returns list of years on website """
-        years = []
-        tr = soup.find_all('tr')[0::12] #every 12th row has year
-        for i in tr:
-            td = i.find_all('td')
-            years.append(td[0].getText())
-            
-        return years
-    
-    #TODO
-    def get_last_month(self,year,soup):
-        """ returns last month zip """
-        td = soup.find_all('td')
-        for i in td:
-            #if i.find(text=("Prosinec {}")):
-            pass
+
+        if years: #theres some unfinished year
+            #process all files from that year
+            name = re.compile('^.*2020.*.zip$')
+            year = soup.find_all('a', href=name)
+            for month in year:
+                self.files_to_process.append(month['href'][5:])
+                
         
 
     def parse_region_data(self,region):
@@ -123,14 +121,9 @@ class DataDownloader:
     def process_folder(self,file_name):
 
         data = {}
-        #TODO opravit tento list
-        last_files = ['datagis2016.zip','datagis-rok-2017.zip','datagis-rok-2018.zip',
-                         'datagis-rok-2019.zip','datagis-01-2020.zip','datagis-02-2020.zip',
-                         'datagis-03-2020.zip','datagis-04-2020.zip','datagis-05-2020.zip',
-                         'datagis-06-2020.zip','datagis-07-2020.zip','datagis-08-2020.zip',
-                         'datagis-09-2020.zip']
+
         for zfile in os.listdir(self.folder):
-            if zfile in last_files:
+            if zfile in self.files_to_process:
                 try:
                     with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
                         with zf.open(file_name,'r') as csv_f:
