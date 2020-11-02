@@ -95,13 +95,12 @@ def plot_graph(axes,print_x,print_y,header,order):
         try:
             y = print_y[i]
             x = print_x[i]
-            print('Y',y)
-            print('X',x)
             bar = ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
             ax.set_title(header[i])
             o = order[i]
             i = i + 1
             j = 0
+            ax.tick_params(axis='x',labelrotation=90)
             for rect in bar: 
                 height = rect.get_height()
                 ax.text(rect.get_x() + rect.get_width()/2., height,
