@@ -78,12 +78,13 @@ class DataDownloader:
 
         files_to_process = []
         years = soup.body.findAll(text=re.compile('Prosinec'))
-        
-        for link in soup.find_all('a', href=lambda href: href.endswith('zip')):
+        zip_files = soup.find_all('a', href=lambda href: href.endswith('zip'))
+
+        for link in zip_files:
             x = re.search("^.*/datagis.*11.*.zip$",link['href'])
             if x: #match
                 del years[0]
-                next_a = soup.find('a',href=link['href']).findNext('a')
+                next_a = link.findNext('a').findNext('a')
                 self.files_to_process.append(next_a['href'][5:])
             data = s.get(self.url+link['href'])
             if data not in os.listdir(self.folder):
@@ -92,9 +93,10 @@ class DataDownloader:
         if years: #theres some unfinished year
             #process all files from that year
             name = re.compile('^.*2020.*.zip$')
-            year = soup.find_all('a', href=name)
+            year = soup.find_all('a',href=name)
             for month in year:
                 self.files_to_process.append(month['href'][5:])
+            print(year)
                 
         
 
@@ -102,7 +104,7 @@ class DataDownloader:
         """ Function processes data for given region. Returns (list, np.array), where
             list contains names of columns and np.array data """
 
-        if not os.listdir(self.folder):
+        if not os.listdir(self.folder) or len(self.files_to_process) == 0:
             self.download_data()
         
 
@@ -111,6 +113,7 @@ class DataDownloader:
 
         columns = list(self.columns_clean)
         columns.insert(0,"region")
+        
         region_arr = np.repeat(region,len(data[1]))
 
         data = np.insert(data,0,region_arr,0) #insert name of region
@@ -121,7 +124,7 @@ class DataDownloader:
     def process_folder(self,file_name):
 
         data = {}
-
+        
         for zfile in os.listdir(self.folder):
             if zfile in self.files_to_process:
                 try:
