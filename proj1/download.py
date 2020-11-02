@@ -96,7 +96,6 @@ class DataDownloader:
             year = soup.find_all('a',href=name)
             for month in year:
                 self.files_to_process.append(month['href'][5:])
-            print(year)
                 
         
 
