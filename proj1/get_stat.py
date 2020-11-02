@@ -37,12 +37,22 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
             
         i = count
 
-    #sort arrays descending toto netreba :))) iba priradit cisla nad grafy podla poradia
-    #for year in dic_years.keys():
-    #    dic_years[year] = sorted(dic_years[year], key=lambda x: x[1],reverse=True)
+    #assign to positions of each region, their order
+    order = []
+    for year in dic_years.keys():
+        a = [y for (x, y) in dic_years[year]]
+        indexes = np.argsort(a)
+        print('indexes',indexes)
+        print('values',a)
+        enum = [x for x in range(4, 0,-1)] # get reversed order
+        print('order',order)
+        for index in indexes:
+            a[indexes[index]] = enum[index]
+
+        order.append(a)
     
     num_cols = int(len(regions) / 2) +1
-    print('rows',num_cols)
+    
     fig, axes = plt.subplots(ncols=num_cols, nrows=2,constrained_layout=True,figsize=(8,11))
     print_x = []
     print_y = []
@@ -54,24 +64,13 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         print_x.append([x for (x, y) in dic_years[year]])
     
 
-    i = 0
-    for ax in axes.reshape(-1):
-        try:
-            y = print_y[i]
-            x = print_x[i]
-            bar = ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
-            ax.set_title(header[i])
-            i = i + 1
-        except IndexError:
-            pass
-        for rect in bar: #nie vysku ale cisla 1.2.3 ..
-            height = rect.get_height()
-            ax.text(rect.get_x() + rect.get_width()/2., height*0.98,
-                '%d' % int(height),
-                ha='center', va='bottom')
+    #plot graphs
+    plot_graph(axes,print_x,print_y,header,order)
     
     plt.tight_layout()
-    if fig_location: #TODO
+    
+
+    if fig_location:
         output_path = os.path.join(fig_location+'/graphs.png')
         plt.savefig(output_path)    
     
@@ -79,7 +78,28 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         plt.show()
 
 
-
+def plot_graph(axes,print_x,print_y,header,order):
+    
+    i = 0
+    for ax in axes.reshape(-1):
+        try:
+            y = print_y[i]
+            x = print_x[i]
+            bar = ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
+            ax.set_title(header[i])
+            
+            j = 0
+            for rect in bar: 
+                height = rect.get_height()
+                ax.text(rect.get_x() + rect.get_width()/2., height,
+                    '%d' % order[i][j],
+                    ha='center', va='bottom')
+                j = j + 1
+            i = i + 1
+        except IndexError:
+            pass
+    
+    plt.tight_layout()
 
 
 
