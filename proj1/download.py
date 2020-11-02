@@ -7,7 +7,7 @@ class DataDownloader:
     cookies = {}
     headers = {}
     cache = {} 
-    files_to_process = [] #last files of year, if year doesnt have last file, then process all 
+    files_to_process = []  # last files of year, if year doesnt have last file, then process all
     regions = {'PHA':'00','STC':'01','JHC':'02','PLK':'03','KVK':'19','ULK':'04','LBK':'18',
                'HKK':'05','PAK':'17','OLK':'14','MSK':'07','JHM':'06','ZLK':'15','VYS':'16'}
     """ = ['Region','ID','Čas','Lokalita','Druh nehody','Druh zrážky','Druh prekážky',
@@ -29,7 +29,6 @@ class DataDownloader:
               'p20','p21','p22','p23','p24','p27','p28','p34','p35','p39','p44',
               'p45a','p47','p48a','p49','p50a','p50b','p51','p52','p53','p55a',
               'p57','p58','a','b','d','e','f','g','k','l','n','p','q','r','s','t','p5a')
-    
 
     def __init__(self,url="https://ehw.fit.vutbr.cz/izv/",folder="data",cache_filename="data_{}.pkl.gz"):
         self.url = url
@@ -37,7 +36,6 @@ class DataDownloader:
         self.cache_filename = folder+'/'+cache_filename
         self.create_folder(self.folder)
         self.set_connection()
-
 
     def set_connection(self):
         """ sets cookies and header for url request """
@@ -61,14 +59,12 @@ class DataDownloader:
             'Accept-Language': 'en-US,en;q=0.9',
         }
 
-
-    def create_folder(self,folder):
+    def create_folder(self, folder):
 
         try:
             os.mkdir(folder)
         except FileExistsError:
             pass
-
 
     def download_data(self):
 
@@ -76,30 +72,29 @@ class DataDownloader:
         data = s.get(self.url, headers=self.headers, cookies=self.cookies).text
         soup = BeautifulSoup(data, features="lxml")
 
-        files_to_process = []
         years = soup.body.findAll(text=re.compile('Prosinec'))
         zip_files = soup.find_all('a', href=lambda href: href.endswith('zip'))
 
         for link in zip_files:
-            x = re.search("^.*/datagis.*11.*.zip$",link['href'])
-            if x: #match
+            x = re.search("^.*/datagis.*11.*.zip$", link['href'])
+            if x:  # match
                 del years[0]
                 next_a = link.findNext('a').findNext('a')
                 self.files_to_process.append(next_a['href'][5:])
             data = s.get(self.url+link['href'])
             if data not in os.listdir(self.folder):
-                open(link['href'],'wb').write(data.content)
+                open(link['href'], 'wb').write(data.content)
 
-        if years: #theres some unfinished year
-            #process all files from that year
+        if years:  # theres some unfinished year
+            # process all files from that year
             name = re.compile('^.*2020.*.zip$')
-            year = soup.find_all('a',href=name)
+            year = soup.find_all('a', href=name)
             for month in year:
                 self.files_to_process.append(month['href'][5:])
                 
         
 
-    def parse_region_data(self,region):
+    def parse_region_data(self, region):
         """ Function processes data for given region. Returns (list, np.array), where
             list contains names of columns and np.array data """
 
@@ -111,16 +106,15 @@ class DataDownloader:
         data = self.process_folder(region_f)
 
         columns = list(self.columns_clean)
-        columns.insert(0,"region")
+        columns.insert(0, "region")
         
-        region_arr = np.repeat(region,len(data[1]))
+        region_arr = np.repeat(region, len(data[1]))
 
-        data = np.insert(data,0,region_arr,0) #insert name of region
+        data = np.insert(data, 0, region_arr, 0) #insert name of region
 
-        return (columns,data) 
+        return (columns, data)
 
-
-    def process_folder(self,file_name):
+    def process_folder(self, file_name):
 
         data = {}
         
@@ -128,10 +122,10 @@ class DataDownloader:
             if zfile in self.files_to_process:
                 try:
                     with zipfile.ZipFile(os.path.join(self.folder,zfile)) as zf:
-                        with zf.open(file_name,'r') as csv_f:
+                        with zf.open(file_name, 'r') as csv_f:
                             for line in csv_f:
                                 clean_line = list(self.parse_line(line))
-                                #add to dictionary if it's not already there
+                                # add to dictionary if it's not already there
                                 if clean_line[0] not in data:
                                     data.update({clean_line[0] : clean_line}) 
                                 
@@ -145,11 +139,10 @@ class DataDownloader:
 
         return new
 
-
     def parse_line(self,line):
         """ Processing of the given line """
 
-        line = line.decode("utf-8",'backslashreplace')
+        line = line.decode("utf-8", 'backslashreplace')
         splitted = line.split(";")
         splitted[-1] = splitted[-1].split("\r\n")[0]
 
@@ -159,7 +152,6 @@ class DataDownloader:
         line_dic = self.cleanup(line_dic)
 
         return line_dic.values()
-
 
     def cleanup(self, line):
         """ Cleans up data values at given line """
@@ -173,21 +165,19 @@ class DataDownloader:
         line = self.clean_date(line)
         line['p2b'] = self.clean_time(line['p2b'])
         line['p47'] = self.clean_XX(line['p47'])
-        line = self.change_to_float(['d','e','f','g'],line)
+        line = self.change_to_float(['d', 'e', 'f', 'g'], line)
 
         return line
 
-
-    def replace_quotes(self,line):
+    def replace_quotes(self, line):
         """ Replaces double quotes from all values with them """
         
         for k,v in line.items():
-            line[k] = v.replace("\"",'')
+            line[k] = v.replace("\"", '')
         
         return line
-        
 
-    def clean_time(self,col):
+    def clean_time(self, col):
         """ Cleans column with time, when hour is unknown set value to empty,
             if only minutes are unknown set them to -1. 
             Sets to HH:MM format """
@@ -202,17 +192,15 @@ class DataDownloader:
 
         return hour + min
 
-
-    def clean_XX(self,col):
+    def clean_XX(self, col):
         """ Replaces XX with """
         
         if col == "XX":
-            col = col.replace("XX","")
+            col = col.replace("XX", "")
         
         return col
-    
-    
-    def change_to_float(self,cols,line):
+
+    def change_to_float(self, cols, line):
         """ Changes values in all cols [list] to float type. If value is text, change to None"""
 
         for i in cols:
@@ -220,70 +208,62 @@ class DataDownloader:
             if a == '':
                 continue
             try:
-                line[i] = float(a.replace(",","."))
+                line[i] = float(a.replace(",", "."))
             except ValueError:
-                line[i] = None #sometimes theres string in data ????
+                line[i] = None  # sometimes theres string in data ????
 
         return line
-    
-    
-    def clean_date(self,line):
+
+    def clean_date(self, line):
         """ Makes one int in YYYYMMDD format """
         line['p2a'] = int(line['p2a'].replace("-",''))
         
         return line
 
-
-    def get_list(self, regions = None):
+    def get_list(self, regions=None):
         """ If param regions = None, print all regions except PHK"""
 
-        process_regs = []
-        data_lst = []
-        linked = np.zeros(shape=(2,2))
+        linked = np.zeros(shape=(2, 2))
         
         if not regions: 
-            process_regs = list(self.regions.keys())[1:] #all regions except prague
+            process_regs = list(self.regions.keys())[1:]  # all regions except prague
         else:
             process_regs = regions
 
         for reg in process_regs:
             if reg in self.cache:
-                region_data =  self.cache[reg]
+                region_data = self.cache[reg]
             elif os.path.exists(self.cache_filename.format(reg)):
                 region_data = self.unpickle_file(reg)
-                self.cache.update({reg : region_data})
+                self.cache.update({reg: region_data})
             else:
                 region_data = self.parse_region_data(reg)
-                self.cache.update({reg : region_data}) # save to class attribute
-                self.pickle_file(reg,region_data) #pickle file
+                self.cache.update({reg: region_data})  # save to class attribute
+                self.pickle_file(reg, region_data)  # pickle file
 
-            #concat arrays
+            # concat arrays
             if np.count_nonzero(linked) == 0:
                 linked = region_data[1].flatten()
-                linked = np.reshape(linked,(len(self.columns_clean)+1,-1))      
+                linked = np.reshape(linked, (len(self.columns_clean)+1, -1))
             else:
-                linked = np.concatenate((linked,region_data[1]),axis=1)
-                
+                linked = np.concatenate((linked, region_data[1]), axis=1)
 
-        return (region_data[0],list(linked))
+        return (region_data[0], list(linked))
 
-    
-    def pickle_file(self,region, tuple_val):
+    def pickle_file(self, region, tuple_val):
         """ Pickles and gzips tuple_val into file named data_{region}.pkl.gz"""
         
         f = self.cache_filename.format(region)
-        gfile =  gzip.GzipFile(f,'wb')
+        gfile = gzip.GzipFile(f, 'wb')
         pickle.dump(tuple_val, gfile)
         gfile.close()
 
-            
-
-    def unpickle_file(self,region):
+    def unpickle_file(self, region):
         """ Function ungzips and unpickles file and returns  data from the pickle file"""
 
         f = self.cache_filename.format(region)
         gfile = gzip.GzipFile(f, 'rb')
-        dataa =  gfile.read()
+        dataa = gfile.read()
         data = pickle.loads(dataa)
         gfile.close()
 
@@ -292,11 +272,9 @@ class DataDownloader:
 
 if __name__ == "__main__":
     data = DataDownloader()
-    ret = data.get_list(['PHA','MSK','KVK'])
-    print('Stĺpce:',ret[0])
-    print('Počet záznamov:',len(ret[1][0]))
-    print('Kraje:',set(ret[1][0]))
+    ret = data.get_list(['PHA', 'MSK', 'KVK'])
+    print('Stĺpce:', ret[0])
+    print('Počet záznamov:', len(ret[1][0]))
+    print('Kraje:', set(ret[1][0]))
 
 
-
-    
