@@ -20,7 +20,7 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         region_dates = date[i:count] 
 
         #extract years from date
-        only_years = np.array([arr[:4] for arr in region_dates])
+        only_years = np.array([str(arr)[:4] for arr in region_dates])
         years = list(sorted(set(only_years)))
         #count number of accidents in each year
         cnt_lst = []
@@ -37,23 +37,14 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
             
         i = count
 
-    #assign to positions of each region, their order
+    #assign to positions of each region their order from highest to lowest (1,..,1+n)
     order = []
-    for year in dic_years.keys():
-        a = [y for (x, y) in dic_years[year]]
-        indexes = np.argsort(a)
-        print('indexes',indexes)
-        print('values',a)
-        enum = [x for x in range(4, 0,-1)] # get reversed order
-        print('order',order)
-        for index in indexes:
-            a[indexes[index]] = enum[index]
-
-        order.append(a)
+    order = get_order(dic_years,len(regions))
     
-    num_cols = int(len(regions) / 2) +1
+    num_cols = int(len(dic_years) / 2) +1
     
     fig, axes = plt.subplots(ncols=num_cols, nrows=2,constrained_layout=True,figsize=(8,11))
+
     print_x = []
     print_y = []
     header = []
@@ -62,6 +53,7 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         header.append(year)
         print_y.append([y for (x, y) in dic_years[year]])
         print_x.append([x for (x, y) in dic_years[year]])
+    print('header',header)
     
 
     #plot graphs
@@ -78,6 +70,24 @@ def plot_stat(data_source, fig_location = None, show_figure = False):
         plt.show()
 
 
+def get_order(dic_years,len_seq):
+    """ returns sequence of numbers. 1 is the region with highest rate. """
+    order = []
+    for year in dic_years.keys():
+        a = [y for (x, y) in dic_years[year]]
+        indexes = np.argsort(a)
+        enum = [x for x in range(len_seq, 0,-1)] # get reversed order
+        try:
+            for index in indexes:
+                a[indexes[index]] = enum[index]
+        except IndexError:
+            print('ERR','index',index,'len enum',len(enum),'len indexes', indexes,'len a',len(a))
+
+        order.append(a)
+
+    return order
+
+
 def plot_graph(axes,print_x,print_y,header,order):
     
     i = 0
@@ -85,18 +95,21 @@ def plot_graph(axes,print_x,print_y,header,order):
         try:
             y = print_y[i]
             x = print_x[i]
+            print('Y',y)
+            print('X',x)
             bar = ax.bar(x, y, width=0.7, bottom=0, align='center',color='C3')
             ax.set_title(header[i])
-            
+            o = order[i]
+            i = i + 1
             j = 0
             for rect in bar: 
                 height = rect.get_height()
                 ax.text(rect.get_x() + rect.get_width()/2., height,
-                    '%d' % order[i][j],
+                    '%d' % o[j],
                     ha='center', va='bottom')
                 j = j + 1
-            i = i + 1
         except IndexError:
+            print("INDEX ERR",i)
             pass
     
     plt.tight_layout()
@@ -104,5 +117,5 @@ def plot_graph(axes,print_x,print_y,header,order):
 
 
 if __name__ == "__main__":
-    plot_stat(DataDownloader().get_list(['MSK','PHA','OLK','PAK']),fig_location='data',show_figure=True)
+    plot_stat(DataDownloader().get_list(),fig_location='data',show_figure=True)
     
