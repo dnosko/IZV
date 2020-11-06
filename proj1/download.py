@@ -110,9 +110,10 @@ class DataDownloader:
         
         region_arr = np.repeat(region, len(data[1]))
 
-        data = np.insert(data, 0, region_arr, 0) #insert name of region
+        np_list = []
+        np_list.append(np.insert(data, 0, region_arr, 0)) #insert name of region
 
-        return (columns, data)
+        return (columns, np_list)
 
     def process_folder(self, file_name):
 
@@ -241,12 +242,14 @@ class DataDownloader:
                 self.cache.update({reg: region_data})  # save to class attribute
                 self.pickle_file(reg, region_data)  # pickle file
 
+            np_arr = region_data[1]
+
             # concat arrays
             if np.count_nonzero(linked) == 0:
-                linked = region_data[1].flatten()
+                linked = np_arr[0].flatten()
                 linked = np.reshape(linked, (len(self.columns_clean)+1, -1))
             else:
-                linked = np.concatenate((linked, region_data[1]), axis=1)
+                linked = np.concatenate((linked, np_arr[0]), axis=1)
 
         return (region_data[0], list(linked))
 
