@@ -67,7 +67,7 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
     
 
     if show_figure:
-        plt.show(block=False)
+        plt.show()
 
 
 def get_order(dic_years, len_seq):
