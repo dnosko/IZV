@@ -2,7 +2,7 @@
 from download import DataDownloader
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+import os, argparse
 
 def plot_stat(data_source, fig_location=None, show_figure=False):
 
@@ -67,7 +67,7 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
     
 
     if show_figure:
-        plt.show()
+        plt.show(block=False)
 
 
 def get_order(dic_years, len_seq):
@@ -114,8 +114,21 @@ def plot_graph(axes, print_x, print_y, header, order):
     
 
 
+def parse_args():
+    """ Function parses arguments from command line """
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--show_figure ', action='store_true', dest='show_fig')
+    parser.add_argument('--fig_location', dest='fig_loc', type=str)
+
+    args = parser.parse_args()
+    return args.show_fig, args.fig_loc
 
 if __name__ == "__main__":
     data_source = DataDownloader().get_list(['PHA', 'MSK', 'KVK'])
-    plot_stat(data_source,fig_location='data',show_figure=True)
+    args = parse_args()
+    show_fig = args[0]
+    fig_loc = args[1]
+    plot_stat(data_source,fig_loc,show_fig)
     
