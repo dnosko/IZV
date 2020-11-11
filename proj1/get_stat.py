@@ -56,18 +56,23 @@ def plot_stat(data_source, fig_location=None, show_figure=False):
     # plot graphs
     plot_graph(axes, print_x, print_y, header, order)
     
-    plt.tight_layout()
 
     if fig_location:
+        try:
+            os.mkdir(fig_location)
+        except FileExistsError:
+            pass
         output_path = os.path.join(fig_location+'/graphs.png')
         plt.savefig(output_path)    
     
+
     if show_figure:
         plt.show()
 
 
 def get_order(dic_years, len_seq):
     """ returns sequence of numbers. 1 is the region with highest rate. """
+
     order = []
     for year in dic_years.keys():
         a = [y for (x, y) in dic_years[year]]
@@ -85,6 +90,7 @@ def get_order(dic_years, len_seq):
 
 
 def plot_graph(axes, print_x, print_y, header, order):
+    """ Function plots graph for each year in list header """
     
     i = 0
     for ax in axes.reshape(-1):
@@ -106,5 +112,10 @@ def plot_graph(axes, print_x, print_y, header, order):
         except IndexError:
             pass
     
-    plt.tight_layout()
 
+
+
+if __name__ == "__main__":
+    data_source = DataDownloader().get_list(['PHA', 'MSK', 'KVK'])
+    plot_stat(data_source,fig_location='data',show_figure=True)
+    

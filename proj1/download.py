@@ -146,7 +146,6 @@ class DataDownloader:
         line = line.decode("windows-1250")
         splitted = line.split(";")
         splitted[-1] = splitted[-1].split("\r\n")[0]
-        print(line)
 
         # Create a dictionary from list
         zipbObj = zip(self.columns, splitted)
