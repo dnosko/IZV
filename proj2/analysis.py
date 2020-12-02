@@ -15,14 +15,14 @@ import gzip
 
 # Ukol 1: nacteni dat
 def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
-
     df = pd.read_pickle(filename, compression='gzip')
+
     orig_size = df.memory_usage(deep=True)
-    print(df.dtypes)
+
+    # change to datetime
     df = df.rename(columns={'p2a': 'date'})
     df['date'] = pd.to_datetime(df['date'])
     df['date'] = df['date'].dt.date
-    print(df.iloc[0])
 
     columns = list(df)
     del columns[-1]  # delete region
@@ -33,8 +33,8 @@ def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
     if verbose:
         MB = 1048576
         new_size = df.memory_usage(deep=True)
-        print('orig_size={:.1f} MB'.format(orig_size.sum()/MB))
-        print('new_size={:.1f} MB'.format(new_size.sum()/MB))
+        print('orig_size={:.1f} MB'.format(orig_size.sum() / MB))
+        print('new_size={:.1f} MB'.format(new_size.sum() / MB))
 
     return df
 
