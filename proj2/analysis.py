@@ -42,20 +42,25 @@ def get_dataframe(filename: str, verbose: bool = False) -> pd.DataFrame:
 # Ukol 2: následky nehod v jednotlivých regionech
 def plot_conseq(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
-
     people = df[['region', 'p13a', 'p13b', 'p13c']]
     melted_table = people.melt(id_vars="region", var_name="types")
-    table = pd.pivot_table(melted_table, columns="types", index="region",values="value", aggfunc=np.sum)
-    print(table)
+    table = pd.pivot_table(melted_table, columns="types", index="region", values="value", aggfunc=["sum", "count"])
 
+    #  drop repeating columns
+    table = table.drop(table.columns[[4, 5]], axis=1)
+    #  rename last column to count
+    table = table.set_axis([*table.columns[:-1], 'count'], axis=1, inplace=False)
+    #  sort table
+    table = table.reindex(table.sort_values(by='count', ascending=False).index)
+    print(table)
 
     if fig_location:
         pass
-        #plt.savefig(fig_location)
+        # plt.savefig(fig_location)
 
     if show_figure:
         pass
-        #plt.show()
+        # plt.show()
 
 
 # Ukol3: příčina nehody a škoda
