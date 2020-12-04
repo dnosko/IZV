@@ -60,9 +60,11 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
     colors = ['tab:blue', 'tab:green', 'tab:red', 'tab:orange']
     axis_y = table.columns[1:]
     i = 0
-    
+
     # set axes
     for ax in axes:
+        # set grid
+        ax.yaxis.grid(True)
         sns.barplot(x="region", y=axis_y[i], data=table,
                     ax=ax, color=colors[i])
         # remove x label
@@ -75,6 +77,8 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
         y_label.set_visible(False)
         # set title
         ax.title.set_text(titles[i])
+        # set background
+        ax.set_facecolor('xkcd:black')
         i = i + 1
 
     fig.tight_layout()
