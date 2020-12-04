@@ -53,35 +53,18 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
 
     table = table.reset_index()
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(16, 16))
+    fig, axes = plt.subplots(4, 1, figsize=(16, 16))
 
-    palettes = []
-    colors = ["Blues","Reds","Greens","Oranges"]
-    for i in colors:
-        palette = sns.color_palette(i, 14)
-        palette.reverse()
-        palettes.append(palette)
-
-    # ax1
-    sns.barplot(x="region", y="p13a", data=table,
-                ax=ax1, palette=palettes[0], label="Úmrtia")
-
-    # ax2
-    sns.barplot(data=table, x="region", y="p13b",
-                ax=ax2, ci="sd", palette=palettes[1], label="Ťažko zranení")
-
-    # ax3
-    sns.barplot(data=table, x="region", y="p13c",
-                ax=ax3, ci=0, palette=palettes[2], label="Ľahko zranení")
-
-    # ax4
-    sns.barplot(x="region", y="count", data=table,
-                ax=ax4, palette=palettes[3], label="Celkový počet nehôd")
-
+    #  set graphs
     titles = ['Úmrtia', 'Ťažko zranení', 'Ľahko zranení', 'Celkový počet nehôd']
+    colors = ['tab:blue', 'tab:green', 'tab:red', 'tab:orange']
+    axis_y = table.columns[1:]
     i = 0
+    
     # set axes
-    for ax in (ax1, ax2, ax3, ax4):
+    for ax in axes:
+        sns.barplot(x="region", y=axis_y[i], data=table,
+                    ax=ax, color=colors[i])
         # remove x label
         x_axis = ax.axes.get_xaxis()
         x_label = x_axis.get_label()
