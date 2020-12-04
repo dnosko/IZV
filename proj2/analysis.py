@@ -4,10 +4,8 @@
 from matplotlib import pyplot as plt
 import pandas as pd
 from pandas.api.types import CategoricalDtype
-# import seaborn as sns
+import seaborn as sns
 import numpy as np
-import os
-import gzip
 
 
 # muzete pridat libovolnou zakladni knihovnu ci knihovnu predstavenou na prednaskach
@@ -49,18 +47,60 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
     #  drop repeating columns
     table = table.drop(table.columns[[4, 5]], axis=1)
     #  rename last column to count
-    table = table.set_axis([*table.columns[:-1], 'count'], axis=1, inplace=False)
+    table.columns = ['p13a', 'p13b', 'p13c', 'count']
     #  sort table
     table = table.reindex(table.sort_values(by='count', ascending=False).index)
-    print(table)
+
+    table = table.reset_index()
+
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(16, 16))
+
+    palettes = []
+    colors = ["Blues","Reds","Greens","Oranges"]
+    for i in colors:
+        palette = sns.color_palette(i, 14)
+        palette.reverse()
+        palettes.append(palette)
+
+    # ax1
+    sns.barplot(x="region", y="p13a", data=table,
+                ax=ax1, palette=palettes[0], label="Úmrtia")
+
+    # ax2
+    sns.barplot(data=table, x="region", y="p13b",
+                ax=ax2, ci="sd", palette=palettes[1], label="Ťažko zranení")
+
+    # ax3
+    sns.barplot(data=table, x="region", y="p13c",
+                ax=ax3, ci=0, palette=palettes[2], label="Ľahko zranení")
+
+    # ax4
+    sns.barplot(x="region", y="count", data=table,
+                ax=ax4, palette=palettes[3], label="Celkový počet nehôd")
+
+    titles = ['Úmrtia', 'Ťažko zranení', 'Ľahko zranení', 'Celkový počet nehôd']
+    i = 0
+    # set axes
+    for ax in (ax1, ax2, ax3, ax4):
+        # remove x label
+        x_axis = ax.axes.get_xaxis()
+        x_label = x_axis.get_label()
+        x_label.set_visible(False)
+        # remove y label
+        y_axis = ax.axes.get_yaxis()
+        y_label = y_axis.get_label()
+        y_label.set_visible(False)
+        # set title
+        ax.title.set_text(titles[i])
+        i = i + 1
+
+    fig.tight_layout()
 
     if fig_location:
-        pass
-        # plt.savefig(fig_location)
+        plt.savefig(fig_location)
 
     if show_figure:
-        pass
-        # plt.show()
+        plt.show()
 
 
 # Ukol3: příčina nehody a škoda
