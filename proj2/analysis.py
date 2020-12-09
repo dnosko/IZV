@@ -79,7 +79,7 @@ def plot_conseq(df: pd.DataFrame, fig_location: str = None,
         # set title
         ax.title.set_text(titles[i])
         # set background
-        ax.set_facecolor('xkcd:black')
+        ax.set_facecolor('xkcd:silver')
         i = i + 1
 
     fig.tight_layout()
@@ -91,36 +91,36 @@ def plot_damage(df: pd.DataFrame, fig_location: str = None,
                 show_figure: bool = False):
     #  process dataframe
     accidents = df[['region', 'p53', 'p12']]
-    regions = ['PHA','KVK','JHC','PLK']
+    regions = ['PHA', 'KVK', 'JHC', 'PLK']
     accidents = accidents.set_index('region')
     accidents = accidents.loc[regions]  # get only given regions
 
     #  sort data to bins
-    accident_type = ['nezaviňená řidičem','nepřiměřená rychlost jízdy','nesprávné předjíždění',
-                     'nedání přednosti v jízdě','nesprávný způsob jízdy','technická závada vozidla']
-    bins = [100,201,301,401,501,601,616]
-    accidents['p12'] = pd.cut(accidents['p12'], bins,labels=accident_type, right=False)
-    casualty_label = ['<50','50-200','200-500','500-1000','1000 >']
-    accidents['p53'] = pd.cut(accidents['p53'], [0,50,200,500,1000,float("inf")], labels=casualty_label,right=False)
+    accident_type = ['nezaviňená řidičem', 'nepřiměřená rychlost jízdy', 'nesprávné předjíždění',
+                     'nedání přednosti v jízdě', 'nesprávný způsob jízdy', 'technická závada vozidla']
+    bins = [100, 201, 301, 401, 501, 601, 616]
+    accidents['p12'] = pd.cut(accidents['p12'], bins, labels=accident_type, right=False)
+    casualty_label = ['<50', '50-200', '200-500', '500-1000', '1000 >']
+    accidents['p53'] = pd.cut(accidents['p53'], [0, 50, 200, 500, 1000, float("inf")], labels=casualty_label,
+                              right=False)
     #  group and get size
-    accidents = accidents.groupby(['region','p12','p53']).size().reset_index(name='counts')
+    accidents = accidents.groupby(['region', 'p12', 'p53']).size().reset_index(name='counts')
 
-    fig, axes = plt.subplots(2, 2, figsize=(16, 16))
-    g = sns.catplot(x="p53",y="counts",col="region",col_wrap=2, hue="p12", data=accidents, kind="bar")
+    #  set graph params
+    sns.set_theme(context='notebook', style='darkgrid', palette='deep',
+                  font='sans-serif', font_scale=1, color_codes=True)
+
+    g = sns.catplot(x="p53", y="counts", col="region", col_wrap=2, hue="p12", data=accidents, kind="bar")
     #  set scale
-    g.set(yscale="log")
-    #  set labels
-    g.set_axis_labels(x_var="Škoda [tisíc Kč]", y_var="Počet nehôd")
+    g.set(yscale="log", xlabel='Škoda [tisíc Kč]', ylabel='Počet nehôd')
     #  set titles
-    plt.subplots_adjust(top=0.9)
+    plt.subplots_adjust(top=0.9, hspace=0.2, wspace=0.2, bottom=0.1)
     g.fig.suptitle('Počet nehôd v závislosti na škode v Kč')
     g.set_titles("{col_name}")
     g._legend.set_title("Príčina nehody")
-    g.despine(left=True, botom=True)
-    fig.tight_layout()
     _show_fig(fig_location, show_figure)
 
-    print(accidents)
+
 
 # Ukol 4: povrch vozovky
 def plot_surface(df: pd.DataFrame, fig_location: str = None,
@@ -136,6 +136,7 @@ def _show_fig(fig_location: str = None, show_figure: bool = False):
     if show_figure:
         plt.show()
 
+
 if __name__ == "__main__":
     pass
     # zde je ukazka pouziti, tuto cast muzete modifikovat podle libosti
@@ -143,5 +144,5 @@ if __name__ == "__main__":
     # funkce.
     df = get_dataframe("accidents.pkl.gz", verbose=True)
     #plot_conseq(df, fig_location="01_nasledky.png", show_figure=True)
-    plot_damage(df, "02_priciny.png", True)
-    # plot_surface(df, "03_stav.png", True)
+    #plot_damage(df, "02_priciny.png", True)
+    plot_surface(df, "03_stav.png", True)
