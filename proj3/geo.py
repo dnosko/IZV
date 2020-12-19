@@ -32,9 +32,12 @@ def _set_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 def make_geo(df: pd.DataFrame) -> geopandas.GeoDataFrame:
     """ Konvertovani dataframe do geopandas.GeoDataFrame se spravnym kodovani"""
     df = _set_dataframe(df)
+
     gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df["d"], df["e"]),
                                  crs="EPSG:5514")
-    print(gdf.loc[0])
+    # odstran nezname pozicie
+    gdf = gdf[gdf['geometry'].is_valid]
+
     return gdf
 
 def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
