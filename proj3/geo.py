@@ -72,13 +72,14 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
 
     # vyfiltruj iba jeden region - JHM
     gdf = gdf.loc[gdf['region'] == "JHM"]
+    gdf = gdf.to_crs("EPSG:3857")
 
     # prirad farby a popis k cislam: 1 v obci, 2 mimo obce
     attrib = {1: ("v obci", "tab:red"), 2: ("mimo obce", "tab:blue")}
 
     lims_y = []
     lims_x = []
-    
+
     # nastav graf
     fig, axes = plt.subplots(1, 2, figsize=(18, 8))
     i = 0
@@ -100,6 +101,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     ymin = min(lims_y)
     xmax = max(lims_x)
     xmin = min(lims_x)
+
     for ax in axes:
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(xmin, xmax)
