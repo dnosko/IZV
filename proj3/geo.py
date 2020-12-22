@@ -81,7 +81,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     lims_x = []
 
     # nastav graf
-    fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
     i = 0
     for ax in axes:
         val = list(attrib.keys())[i]
@@ -116,9 +116,37 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
                  show_figure: bool = False):
     """ Vykresleni grafu s lokalitou vsech nehod v kraji shlukovanych do clusteru """
 
+    gdf = gdf.loc[gdf['region'] == "JHM"]
+    gdf = gdf.to_crs("EPSG:3857")
+
+    coords = np.dstack([gdf.geometry.x, gdf.geometry.y]).reshape(-1, 2)
+    db = sklearn.cluster.MiniBatchKMeans(n_clusters=15).fit(coords)
+
+    gdf4 = gdf.copy()
+    gdf4["cluster"] = db.labels_
+
+    gdf4 = gdf4.dissolve(by="cluster", aggfunc={"p1": "count"}).rename(columns=dict(p1="cnt"))
+
+    gdf_coords = geopandas.GeoDataFrame(
+        geometry=geopandas.points_from_xy(db.cluster_centers_[:, 0], db.cluster_centers_[:, 1]))
+    gdf5 = gdf4.merge(gdf_coords, left_on="cluster", right_index=True).set_geometry("geometry_y")
+    fig = plt.figure(figsize=(16, 8))  ###
+    ax = plt.gca()  ###
+
+    # vsetky nehody
+    gdf.plot(ax=ax, color="tab:purple", alpha=0.2, markersize=1)
+    # clustre
+    gdf5.plot(ax=ax, markersize="cnt", column="cnt", legend=True, alpha=0.6)
+    # pridaj podklad
+    ctx.add_basemap(ax, crs="epsg:3857", source=ctx.providers.Stamen.TonerLite, alpha=0.9)
+
+    ax.axis("off")
+    ax.set_title("Nehody v JHM kraji")
+    #fig.tight_layout()
+    _show_fig(fig_location, show_figure)
 
 if __name__ == "__main__":
     # zde muzete delat libovolne modifikace
     gdf = make_geo(pd.read_pickle("accidents.pkl.gz"))
-    plot_geo(gdf, "geo1.png", True)
-    # plot_cluster(gdf, "geo2.png", True)
+    #  plot_geo(gdf, "geo1.png", True)
+    plot_cluster(gdf, "geo2.png", True)
