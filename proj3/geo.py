@@ -101,6 +101,7 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     ymin = min(lims_y)
     xmax = max(lims_x)
     xmin = min(lims_x)
+    print(lims_x, lims_y)
 
     for ax in axes:
         ax.set_ylim(ymin, ymax)
@@ -120,7 +121,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     gdf = gdf.to_crs("EPSG:3857")
 
     coords = np.dstack([gdf.geometry.x, gdf.geometry.y]).reshape(-1, 2)
-    db = sklearn.cluster.MiniBatchKMeans(n_clusters=15).fit(coords)
+    db = sklearn.cluster.MiniBatchKMeans(n_clusters=20).fit(coords)
 
     gdf4 = gdf.copy()
     gdf4["cluster"] = db.labels_
@@ -136,10 +137,9 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     # vsetky nehody
     gdf.plot(ax=ax, color="tab:purple", alpha=0.2, markersize=1)
     # clustre
-    gdf5.plot(ax=ax, markersize="cnt", column="cnt", legend=True, alpha=0.6)
+    gdf5.plot(ax=ax, markersize=gdf4["cnt"]/3, column="cnt", legend=True, alpha=0.6)
     # pridaj podklad
-    ctx.add_basemap(ax, crs="epsg:3857", source=ctx.providers.Stamen.TonerLite, alpha=0.9)
-
+    ctx.add_basemap(ax, crs="epsg:3857", source=ctx.providers.Stamen.TonerLite, alpha=0.9, zoom=10, reset_extent=True)
     ax.axis("off")
     ax.set_title("Nehody v JHM kraji")
     #fig.tight_layout()
@@ -148,5 +148,5 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
 if __name__ == "__main__":
     # zde muzete delat libovolne modifikace
     gdf = make_geo(pd.read_pickle("accidents.pkl.gz"))
-    #  plot_geo(gdf, "geo1.png", True)
+    #plot_geo(gdf, "geo1.png", True)
     plot_cluster(gdf, "geo2.png", True)
