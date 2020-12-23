@@ -40,19 +40,6 @@ def _show_fig(fig_location: str = None, show_figure: bool = False):
     if show_figure:
         plt.show()
 
-def _get_min_max(ax):
-    """ najde min a max extremy na osi ax """
-    lims_y = []
-    lims_x = []
-    ymin, ymax = ax.get_ylim()
-    lims_y.append(ymin)
-    lims_y.append(ymax)
-    xmin, xmax = ax.get_xlim()
-    lims_x.append(xmax)
-    lims_x.append(xmin)
-
-    return (lims_x, lims_y)
-
 
 def make_geo(df: pd.DataFrame) -> geopandas.GeoDataFrame:
     """ Konvertovani dataframe do geopandas.GeoDataFrame se spravnym kodovani"""
@@ -77,11 +64,8 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     # prirad farby a popis k cislam: 1 v obci, 2 mimo obce
     attrib = {1: ("v obci", "tab:red"), 2: ("mimo obce", "tab:blue")}
 
-    lims_y = []
-    lims_x = []
-
     # nastav graf
-    fig, axes = plt.subplots(1, 2, figsize=(16, 8))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 8), subplot_kw={'ylim': (6210000, 6387884.9), 'xlim': (1728410, 1973671.9)})
     i = 0
     for ax in axes:
         val = list(attrib.keys())[i]
@@ -89,25 +73,11 @@ def plot_geo(gdf: geopandas.GeoDataFrame, fig_location: str = None,
         title = "Nehody v JHM kraji: " + attrib[val][0]
         gdf[gdf["p5a"] == val].plot(ax=ax, markersize=3, color=color)
         ax.axis("off")
-        # najdi min a max hodnoty v kazdom podgrafe
-        x, y = _get_min_max(ax)
-        lims_x = lims_x + x
-        lims_y = lims_y + y
+        ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.Stamen.TonerLite,zoom=10,
+                        alpha=0.9)
 
         ax.set_title(title)
         i = i + 1
-
-    ymax = max(lims_y)
-    ymin = min(lims_y)
-    xmax = max(lims_x)
-    xmin = min(lims_x)
-    print(lims_x, lims_y)
-
-    for ax in axes:
-        ax.set_ylim(ymin, ymax)
-        ax.set_xlim(xmin, xmax)
-        ctx.add_basemap(ax, crs=gdf.crs, source=ctx.providers.Stamen.TonerLite,
-                        alpha=0.9)
 
     fig.tight_layout()
     _show_fig(fig_location, show_figure)
@@ -121,7 +91,7 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     gdf = gdf.to_crs("EPSG:3857")
 
     coords = np.dstack([gdf.geometry.x, gdf.geometry.y]).reshape(-1, 2)
-    db = sklearn.cluster.MiniBatchKMeans(n_clusters=20).fit(coords)
+    db = sklearn.cluster.MiniBatchKMeans(n_clusters=15).fit(coords)
 
     gdf4 = gdf.copy()
     gdf4["cluster"] = db.labels_
@@ -139,14 +109,16 @@ def plot_cluster(gdf: geopandas.GeoDataFrame, fig_location: str = None,
     # clustre
     gdf5.plot(ax=ax, markersize=gdf4["cnt"]/3, column="cnt", legend=True, alpha=0.6)
     # pridaj podklad
-    ctx.add_basemap(ax, crs="epsg:3857", source=ctx.providers.Stamen.TonerLite, alpha=0.9, zoom=10, reset_extent=True)
+    ctx.add_basemap(ax, crs="epsg:3857", source=ctx.providers.Stamen.TonerLite, alpha=0.9)
     ax.axis("off")
+    ax.set_ylim(6210000, 6387884.9)
+    ax.set_xlim(1728410, 1973671.9)
     ax.set_title("Nehody v JHM kraji")
-    #fig.tight_layout()
+    fig.tight_layout()
     _show_fig(fig_location, show_figure)
 
 if __name__ == "__main__":
     # zde muzete delat libovolne modifikace
     gdf = make_geo(pd.read_pickle("accidents.pkl.gz"))
-    #plot_geo(gdf, "geo1.png", True)
+    plot_geo(gdf, "geo1.png", True)
     plot_cluster(gdf, "geo2.png", True)
