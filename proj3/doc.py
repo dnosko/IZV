@@ -26,6 +26,11 @@ def _set_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         if i not in type_dic and i != 'date':
             df[i] = df[i].astype("category")
 
+    accident_type = ['nezaviňená řidičem', 'nepřiměřená rychlost jízdy', 'nesprávné předjíždění',
+                     'nedání přednosti v jízdě', 'nesprávný způsob jízdy', 'technická závada vozidla']
+
+    df = sort_to_bins(df, accident_type, [100, 201, 301, 401, 501, 601, 616], 'p12')
+
     return df
 
 def mold_table(cols, names, df: pd.DataFrame):
@@ -51,12 +56,49 @@ def sort_to_bins(df: pd.DataFrame, labels, bins, col):
     df[col] = pd.cut(df[col], bins, labels=labels, right=False)
     return df
 
+def bad_driving(df: pd.DataFrame):
+    """ The biggest mistakes while driving """
+    df1 = df.groupby(['p12']).count().reset_index()
+    df1 = df1[['p12', 'p1']]
+    df1 = df1[np.isin(df1, list(range(501,517))).any(axis=1)]
+    bad_driving_dic = {501:'protismer', 502:'vyhybanie bez odstupu',503:'nedodržanie odstupu',
+                       504:'nesprávne cúvanie/otáčanie',505:'chyba mi udani smeru jizdy',
+                       506:'bezohladna, agresivna jazda',507:'bezdovodne zastavenie',
+                       508:'vodic sa nevenoval jazde',509:'samovolne rozbehnutie',
+                       510:'vjazda na nespevnenu cestu',511:'nezvladnutie riadenia'
+                       , 512:'jazda v protismere v jednosmerke',516:'iný druh'}
+
+    df1 = df1.set_index('p12')
+    df1= df1.rename(bad_driving_dic)
+    # sort
+    df1 = df1.sort_values(by='p1', ascending=False)
+    print('Vodiči majú problém s:')
+    print(df1.head(3))
+
+def not_drivers_fault(df: pd.DataFrame):
+    """ Accidents that are not drivers fault and state of the road """
+
+    df1 = df.loc[df['p12'] == 'nezaviňená řidičem']
+
+    road_type = {0:'jiný stav',1: 'suchý neznečištěný',2: 'suchý znečištěný',
+                 3:'mokrý',4: 'bláto',5: 'náledí',6: 'ujetý sníh - posypané',
+                 7:'náledí, ujetý sníh - neposypané',8: 'rozlitý olej, nafta apod. ',
+                 9:'souvislý sníh',10: 'náhlá změna stavu'}
+
+
+    df1 = df1.groupby('p16').count()
+    # get only these rows
+    df1 = df1[['p1']]
+    df1 = df1.sort_values(by='p1', ascending=False)
+    df1 = df1.rename(road_type)
+
+    print('Nehod celkovo:', df1['p1'].sum())
+    print('Nehody na suchej vozovke:', df1['p1'][0])
+    print('Nehody na mokrej vozovke:', df1['p1'][1])
+
+
 def plot_graph(df: pd.DataFrame) -> pd.DataFrame:
     #  sort data to bins
-    accident_type = ['nezaviňená řidičem', 'nepřiměřená rychlost jízdy', 'nesprávné předjíždění',
-                     'nedání přednosti v jízdě', 'nesprávný způsob jízdy', 'technická závada vozidla']
-
-    df = sort_to_bins(df, accident_type, [100, 201, 301, 401, 501, 601, 616], 'p12')
 
     table = mold_table(['p12', 'p13a', 'p13b', 'p13c'],['Úmrtia', 'Ťažko zranení', 'Ľahko zranení', 'count'],df )
 
@@ -114,15 +156,11 @@ def plot(df: pd.DataFrame):
 def substances_deaths(df: pd.DataFrame):
     """ Most deaths by drivers under influence in average: """
 
-    alcohol = ['alkohol do 0.24', 'triezvy', 'alkohol do 0.5','drogy','drogy a alkohol',
-                     'alkohol do 1.0', 'alkohol do 1.5', 'alkohol viac ako 1.5']
-    bins = [1, 2, 3, 4, 5, 7,8,9,10]
+    alcohol = ['nezistovane','alkohol do 0.24', 'triezvy', 'alkohol do 0.5', 'drogy', 'drogy a alkohol',
+               'alkohol do 1.0', 'alkohol do 1.5', 'alkohol viac ako 1.5']
+    bins = [0,1, 2, 3, 4, 5, 7, 8, 9, 10]
     df['p11'] = pd.cut(df['p11'], bins, labels=alcohol, right=False)
 
-    accident_type = ['nezaviňená řidičem', 'nepřiměřená rychlost jízdy', 'nesprávné předjíždění',
-                     'nedání přednosti v jízdě', 'nesprávný způsob jízdy', 'technická závada vozidla']
-
-    df = sort_to_bins(df, accident_type, [100, 201, 301, 401, 501, 601, 616], 'p12')
     # aggregate counts
     table = df.p11.groupby([df.p12, df.p11]).count().unstack().fillna(0).astype(int)
     # set total
@@ -135,17 +173,18 @@ def substances_deaths(df: pd.DataFrame):
         print('LATEX:')
         print(table.to_latex(index=True))
 
-    print_substances('p13a',['Úmrtia','úmrtí'])
-    print_substances('p13b', ['Tažké zranenia', 'zranení'])
 
-def print_substances(col, text):
+    print_substances(df, 'p13a',['Úmrtia','úmrtí'])
+    print_substances(df, 'p13b', ['Tažké zranenia', 'zranení'])
+
+def print_substances(df: pd.DataFrame, col, text):
     table = df.groupby('p11')[col].agg(['sum', 'count', 'mean']).reset_index()
     table = table.sort_values(by='mean', ascending=False)
-    print(table)
+
     print(text[0],"sú najčastejšie spôsobené vodičom pod vplyvom:")
     for i in range(3):
         print(table.iat[i, 0], ' priemerne:', "{:.3f}".format(table.iat[i, 3]), text[1])
-    print(table.iat[-1, 0], ' priemerne:', "{:.3f}".format(table.iat[-1, 3]), text[1])
+    print(table.iat[-2, 0], ' priemerne:', "{:.3f}".format(table.iat[-2, 3]), text[1])
 
 
 def print_values(graf: pd.DataFrame):
@@ -155,8 +194,9 @@ def print_values(graf: pd.DataFrame):
 
 if __name__ == "__main__":
     df = pd.read_pickle("accidents.pkl.gz", compression='gzip')
-    df = _set_dataframe(df)
-    #graf = plot_graph(df)
-    #print_values(graf)
-    substances_deaths(df)
-    pass
+    df1 = _set_dataframe(df)
+    graf = plot_graph(df1)
+    print_values(graf)
+    substances_deaths(df1)
+    not_drivers_fault(df1)
+    bad_driving(df)
