@@ -1,4 +1,4 @@
-#FIT BUT 2020 IZV - Data Analysis and Visualization in Python
+# FIT BUT 2020 IZV - Data Analysis and Visualization in Python
 
 ## Project 1
 Program downloads and preprocess data about car accidents in Czech republic.
